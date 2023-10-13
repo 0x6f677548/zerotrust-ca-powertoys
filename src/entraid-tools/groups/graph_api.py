@@ -1,5 +1,5 @@
 import requests
-from graph_api.api_requests import get_request_headers, API_Response
+from helpers.graph_api import get_request_headers, API_Response
 
 
 def add_user_to_group(access_token: str, user_id: str, group_id: str) -> API_Response:

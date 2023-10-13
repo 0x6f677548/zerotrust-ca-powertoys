@@ -1,11 +1,10 @@
 import click
-import logging
-from conditional_access import (
+from conditional_access.commands import (
     export_ca_policies,
     import_ca_policies,
 )
 from authentication import get_access_token
-from groups import add_user_to_group
+from groups.commands import add_user_to_group
 
 
 @click.group(
@@ -20,6 +19,7 @@ from groups import add_user_to_group
 )
 @click.pass_context
 def cli(ctx: click.Context, log_level: str):
+    import logging
     logging.basicConfig(level=log_level)
     pass
 

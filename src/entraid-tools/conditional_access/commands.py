@@ -1,10 +1,10 @@
 import click
 import logging
-from utils import remove_element_from_dict, get_from_ctx_if_none
-from graph_api.conditional_access import get_policies, create_policy
-from graph_api.groups import get_group_id_by_name, get_group_name_by_id
+from helpers.dict import remove_element_from_dict, replace_with_key_value_lookup
+from helpers.click import get_from_ctx_if_none
+from .graph_api import get_policies, create_policy
+from groups.graph_api import get_group_id_by_name, get_group_name_by_id
 from authentication import get_access_token, ACCESS_TOKEN_OPTION
-
 
 _logger = logging.getLogger(__name__)
 
@@ -43,94 +43,43 @@ def _cleanup_for_create(access_token: str, source: dict) -> dict:
         # now let's transform groupIds to groupNames if any
         conditions = policy["conditions"]
         users = conditions["users"]
-        known_groups = {}
-        _inject_group_ids(
-            access_token,
-            users,
-            "excludeGroupNames",
-            "excludeGroups",
-            known_groups,
+        known_groups = replace_with_key_value_lookup(
+            parent_node=users,
+            keys_node_name="excludeGroupNames",
+            values_node_name="excludeGroups",
+            lookup_func=lambda name: get_group_id_by_name(access_token, name)
         )
-        _inject_group_ids(
-            access_token,
-            users,
-            "includeGroupNames",
-            "includeGroups",
-            known_groups,
+        known_groups = replace_with_key_value_lookup(
+            parent_node=users,
+            values_node_name="includeGroupNames",
+            keys_node_name="includeGroups",
+            lookup_func=lambda name: get_group_id_by_name(access_token, name),
+            lookup_cache=known_groups,
         )
 
     return source
 
 
-def _inject_group_names(
-    access_token: str,
-    users: dict,
-    names_element: str,
-    ids_element: str,
-    known_groups: dict = {},
-) -> dict:
-    if ids_element in users:
-        group_ids = users[ids_element]
-        if names_element not in users:
-            users[names_element] = []
-        for group_id in group_ids:
-            if group_id not in known_groups:
-                _logger.debug(f"Looking up group {group_id}...")
-                group_name = get_group_name_by_id(access_token, group_id)
-                known_groups[group_id] = group_name
-            else:
-                group_name = known_groups[group_id]
-                _logger.debug(f"Found group {group_id} in cache: {group_name}")
-
-            if group_name is not None:
-                # check if the group is already in the list
-                if group_name not in users[names_element]:
-                    users[names_element].append(group_name)
-        remove_element_from_dict(users, ids_element)
-    return known_groups
-
-
-def _inject_group_ids(
-    access_token: str,
-    users: dict,
-    names_element: str,
-    ids_element: str,
-    known_groups: dict = {},
-) -> dict:
-    if names_element in users:
-        group_names = users[names_element]
-        if ids_element not in users:
-            users[ids_element] = []
-        for group_name in group_names:
-            if group_name not in known_groups:
-                _logger.debug(f"Looking up group {group_name}...")
-                group_id = get_group_id_by_name(access_token, group_name)
-                known_groups[group_name] = group_id
-            else:
-                group_id = known_groups[group_name]
-                _logger.debug(f"Found group {group_name} in cache: {group_id}")
-
-            if group_id is not None:
-                # check if the group is already in the list
-                if group_id not in users[ids_element]:
-                    users[ids_element].append(group_id)
-
-        remove_element_from_dict(users, names_element)
-    return known_groups
-
-
 def _cleanup_for_store(access_token: str, source: dict) -> dict:
     source = _cleanup_policies(source)
-    known_groups = {}
+    lookup_cache = {}
     for policy in source["policies"]:
         # now let's transform groupIds to groupNames if any
         conditions = policy["conditions"]
         users = conditions["users"]
-        known_groups = _inject_group_names(
-            access_token, users, "excludeGroupNames", "excludeGroups", known_groups
+        lookup_cache = replace_with_key_value_lookup(
+            parent_node=users,
+            keys_node_name="excludeGroups",
+            values_node_name="excludeGroupNames",
+            lookup_func=lambda id: get_group_name_by_id(access_token, id),
+            lookup_cache=lookup_cache,
         )
-        known_groups = _inject_group_names(
-            access_token, users, "includeGroupNames", "includeGroups", known_groups
+        lookup_cache = replace_with_key_value_lookup(
+            parent_node=users,
+            values_node_name="includeGroupNames",
+            keys_node_name="includeGroups",
+            lookup_func=lambda id: get_group_name_by_id(access_token, id),
+            lookup_cache=lookup_cache,
         )
 
     return source

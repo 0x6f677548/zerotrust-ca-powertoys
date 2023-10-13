@@ -1,6 +1,5 @@
 import click
-import logging
-from graph_api.authentication import (
+from .auth_lib import (
     acquire_token_by_device_flow,
     acquire_token_by_client_secret,
     acquire_token_by_username_password,
@@ -64,8 +63,6 @@ SCOPES_OPTION = click.option(
     help="The scopes to use for authentication (leave blank if you want to use the default scopes)",
 )
 
-_logger = logging.getLogger(__name__)
-
 
 @click.command(
     "get-access-token", help="Gets an access token to be used in other commands"
@@ -96,7 +93,11 @@ def get_access_token(
 ) -> str:
     ctx.ensure_object(dict)
     if device_code:
+        import sys
+
         access_token = acquire_token_by_device_flow(
+            click.echo,
+            sys.stdout.flush,
             client_id=client_id,
             tenant_id=tenant_id,
             scopes=scopes,

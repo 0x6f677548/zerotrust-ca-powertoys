@@ -1,7 +1,8 @@
 import click
-import graph_api.groups
+from .graph_api import add_user_to_group as add_user_to_group_api
 from authentication import get_access_token, ACCESS_TOKEN_OPTION
-from utils import get_from_ctx_if_none
+
+from helpers.click import get_from_ctx_if_none
 
 
 @click.command("add-user-to-group", help="Add a user to a group")
@@ -17,5 +18,5 @@ def add_user_to_group(
         ctx, "access_token", access_token, get_access_token
     )
 
-    result = graph_api.groups.add_user_to_group(access_token, user_id, group_id)
+    result = add_user_to_group_api(access_token, user_id, group_id)
     click.echo(result)

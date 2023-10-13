@@ -36,6 +36,7 @@ def acquire_token_interactive(
     response = app.acquire_token_interactive(scopes=scopes)
 
     if "error" in response:
+        _logger.error(response["error_description"])
         raise Exception(response["error_description"])
 
     return response["access_token"]
@@ -59,6 +60,7 @@ def acquire_token_by_client_secret(
     response = app.acquire_token_for_client(scopes=scopes)
 
     if "error" in response:
+        _logger.error(response["error_description"])
         raise Exception(response["error_description"])
 
     return response["access_token"]
@@ -82,18 +84,20 @@ def acquire_token_by_username_password(
     )
 
     if "error" in response:
+        _logger.error(response["error_description"])
         raise Exception(response["error_description"])
 
     return response["access_token"]
 
 
 def acquire_token_by_device_flow(
+    stdout_callback: callable,
+    stdout_flush: callable,
     client_id: str = DEFAULT_CLIENT_ID,
     tenant_id: str = COMMON_TENANT_ID,
     scopes: list[str] = DEFAULT_SCOPES,
 ) -> str:
     import json
-    import sys
 
     client_id = _replace_with_default_if_none(client_id, DEFAULT_CLIENT_ID)
     tenant_id = _replace_with_default_if_none(tenant_id, COMMON_TENANT_ID)
@@ -107,12 +111,13 @@ def acquire_token_by_device_flow(
         raise ValueError(
             "Fail to create device flow. Err: %s" % json.dumps(flow, indent=4)
         )
-    print(flow["message"])
-    sys.stdout.flush()  # Some terminal needs this to ensure the message is shown
+    stdout_callback(flow["message"])
+    stdout_flush()
 
     response = app.acquire_token_by_device_flow(flow)
 
     if "error" in response:
+        _logger.error(response["error_description"])
         raise Exception(response["error_description"])
 
     return response["access_token"]

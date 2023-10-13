@@ -1,5 +1,5 @@
 import requests
-from graph_api.api_requests import get_request_headers, API_Response
+from helpers.graph_api import get_request_headers, API_Response
 
 
 def get_policies(access_token: str) -> dict:
