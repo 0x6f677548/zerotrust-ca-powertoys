@@ -123,6 +123,7 @@ def get_access_token(
             tenant_id=tenant_id,
             scopes=scopes,
         )
+    # store the access token in the context for chaining commands
     ctx.obj["access_token"] = access_token
     if output_token:
         click.echo(access_token)

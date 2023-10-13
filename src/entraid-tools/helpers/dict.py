@@ -25,19 +25,43 @@ def replace_with_key_value_lookup(
     Usefull for replacing groupIds with groupNames (or vice versa) and similar scenarios.
     """
     if keys_node_name in parent_node:
-        keys = parent_node[keys_node_name]
+
+        # create the values node if it doesn't exist
         if values_node_name not in parent_node:
             parent_node[values_node_name] = []
+
+        # this will contain the keys that have been mapped
+        mapped_elements = []
+
+        keys = parent_node[keys_node_name]
         for key in keys:
-            if key not in lookup_cache:
+            if key in lookup_cache:
+                value = lookup_cache[key]
+                _logger.debug(f"Found {key} in cache: {value}")
+            else:
                 _logger.debug(f"Looking up {key}...")
                 value = lookup_func(key)
                 lookup_cache[key] = value
-            else:
-                value = lookup_cache[key]
-                _logger.debug(f"Found {key} in cache: {value}")
 
-            if value and value not in parent_node[values_node_name]:
+            # we'll only add the value if it's not None
+            if value:
                 parent_node[values_node_name].append(value)
-        remove_element_from_dict(parent_node, keys_node_name)
+                mapped_elements.append(key)
+
+        # remove all keys that have been mapped
+        for key in mapped_elements:
+            keys.remove(key)
+
+        _logger.debug(f"Keys for {keys_node_name}: {keys}")
+        _logger.debug(f"values for {values_node_name}: {parent_node[values_node_name]}")
+
+        # remove the keys node if it's empty
+        if not keys:
+            _logger.debug(f"Removing {keys_node_name}...")
+            parent_node.pop(keys_node_name)
+
+        # remove the values node if it's empty
+        if not parent_node[values_node_name]:
+            _logger.debug(f"Removing {values_node_name}...")
+            parent_node.pop(values_node_name)
     return lookup_cache
