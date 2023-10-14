@@ -2,24 +2,34 @@
 
 ## Usage Examples
 
-### Obtaining an access token and store it in a variable to be used in subsequent commands
-    
-```powershell
+### Obtaining an access token 
+
+and store it in a variable to be used in subsequent commands
+
+There are several ways to obtain an access token. The easiest is to use `get-access-token` in chain with other commands and login interactively. In the example below, the token obtained will be injected in the subsequent command to export the policies. 
+
+```cmd
+> python . get-access-token ca-export --output_file policies.json
+Exporting conditional access policies...
+Obtaining policies from tenant...
+Writing policies to file policies.json...
+```
+
+You can also obtain an access token and store it in a variable to be used in subsequent commands. In this case, you need to instruct the command to output the token using the `--output_token` option. 
+   
+```cmd
 > $token = (python . get-access-token --output_token)
 > python . --access_token $token ca-export --output_file policies.json
 Exporting conditional access policies...
 Obtaining policies from tenant...
 Writing policies to file policies.json...
 ```
-
-### Obtaining an access token on the fly and chain it with other commands
-
-```powershell
-> python . get-access-token ca-export --output_file policies.json
-Exporting conditional access policies...
-Obtaining policies from tenant...
-Writing policies to file policies.json...
+If you are in an endpoint where you can't use the interactive login, you can use `get-access-token` command with `--client_id` and `--client_secret` options, or, alternatively, using device flow, through the `--device_code` option. 
+```cmd
+> $token = (python . get-access-token --device_code --output_token)
+To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code 123456789 to authenticate.
 ```
+
 
 ### Using EntraID-Tools to export policies and import them using Graph PowerShell
 
