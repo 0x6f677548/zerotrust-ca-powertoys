@@ -96,8 +96,8 @@ def get_access_token(
         import sys
 
         access_token = acquire_token_by_device_flow(
-            click.echo,
-            sys.stdout.flush,
+            sys.stderr.write,
+            sys.stderr.flush,
             client_id=client_id,
             tenant_id=tenant_id,
             scopes=scopes,
