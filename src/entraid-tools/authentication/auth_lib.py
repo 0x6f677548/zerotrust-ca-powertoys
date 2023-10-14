@@ -25,11 +25,6 @@ def acquire_token_interactive(
     tenant_id = _replace_with_default_if_none(tenant_id, COMMON_TENANT_ID)
     scopes = _replace_with_default_if_none(scopes, DEFAULT_SCOPES)
 
-    # dump all the parameters
-    print(f"tenant_id: {tenant_id}")
-    print(f"client_id: {client_id}")
-    print(f"scopes: {scopes}")
-
     app = PublicClientApplication(
         client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
     )
