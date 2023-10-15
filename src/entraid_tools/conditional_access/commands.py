@@ -1,10 +1,10 @@
 import click
 import logging
-from helpers.dict import remove_element_from_dict, replace_with_key_value_lookup
-from helpers.click import get_from_ctx_if_none
-from .graph_api import get_policies, create_policy
-from groups.graph_api import get_group_id_by_name, get_group_name_by_id
-from authentication import get_access_token, ACCESS_TOKEN_OPTION
+from ..helpers.dict import remove_element_from_dict, replace_with_key_value_lookup
+from ..helpers.click import get_from_ctx_if_none
+from .graph_api import PoliciesAPI
+from ..groups.graph_api import GroupsAPI
+from ..authentication import get_access_token, ACCESS_TOKEN_OPTION
 
 _logger = logging.getLogger(__name__)
 
@@ -53,6 +53,7 @@ def _load_policies(input_file: str) -> dict:
 
     with open(input_file, "r") as f:
         click.echo(f"Reading policies from file {input_file}...")
+
         policies = json.load(f)
         policies = _format_policies(policies)
         return policies
@@ -68,6 +69,20 @@ def _save_policies(policies: dict, output_file: str):
 
 def _names_to_ids_mapping(access_token: str, source: dict) -> dict:
     lookup_cache: dict = {}
+
+    groups_api = GroupsAPI(access_token=access_token)
+
+    def get_group_id_by_name(name: str) -> str | None:
+        response = groups_api.get_by_name(name)
+        if response.success:
+            groups = response.json()["value"]
+            if len(groups) == 0:
+                return None
+            else:
+                return groups[0]["id"]
+        else:
+            return None
+
     for policy in source:
         # let's transform groupIds to groupNames if any
         conditions = policy["conditions"]
@@ -76,14 +91,14 @@ def _names_to_ids_mapping(access_token: str, source: dict) -> dict:
             parent_node=users,
             keys_node_name="excludeGroupNames",
             values_node_name="excludeGroups",
-            lookup_func=lambda name: get_group_id_by_name(access_token, name),
+            lookup_func=get_group_id_by_name,
             lookup_cache=lookup_cache,
         )
         lookup_cache = replace_with_key_value_lookup(
             parent_node=users,
             keys_node_name="includeGroupNames",
             values_node_name="includeGroups",
-            lookup_func=lambda name: get_group_id_by_name(access_token, name),
+            lookup_func=get_group_id_by_name,
             lookup_cache=lookup_cache,
         )
 
@@ -92,6 +107,17 @@ def _names_to_ids_mapping(access_token: str, source: dict) -> dict:
 
 def _ids_to_names_mapping(access_token: str, source: dict) -> dict:
     lookup_cache = {}
+
+    groups_api: GroupsAPI = GroupsAPI(access_token)
+
+    def get_group_name_by_id(id: str) -> str | None:
+        response = groups_api.get_by_id(id)
+        if response.success:
+            group = response.json()
+            return group["displayName"]
+        else:
+            return None
+
     for policy in source:
         # let's transform groupIds to groupNames if any
         conditions = policy["conditions"]
@@ -100,14 +126,14 @@ def _ids_to_names_mapping(access_token: str, source: dict) -> dict:
             parent_node=users,
             keys_node_name="excludeGroups",
             values_node_name="excludeGroupNames",
-            lookup_func=lambda id: get_group_name_by_id(access_token, id),
+            lookup_func=get_group_name_by_id,
             lookup_cache=lookup_cache,
         )
         lookup_cache = replace_with_key_value_lookup(
             parent_node=users,
             keys_node_name="includeGroups",
             values_node_name="includeGroupNames",
-            lookup_func=lambda id: get_group_name_by_id(access_token, id),
+            lookup_func=get_group_name_by_id,
             lookup_cache=lookup_cache,
         )
 
@@ -230,7 +256,8 @@ def ca_export(
     )
 
     click.echo("Obtaining policies from tenant...")
-    response = get_policies(access_token, odata_filter=filter)
+    policies_api = PoliciesAPI(access_token=access_token)
+    response = policies_api.get_all(odata_filter=filter)
     if not response.success:
         click.secho(
             f"Something went wrong while obtaining the policies: {response.status_code}",
@@ -294,11 +321,12 @@ def ca_import(ctx: click.Context, input_file: str, access_token: str | None = No
     # make sure the policies are cleaned up
     policies = _ca_policies_cleanup_for_import(policies)
     policies = _names_to_ids_mapping(access_token, policies)
+    policies_api = PoliciesAPI(access_token=access_token)
 
     for policy in policies:
         click.echo(f'Creating policy {policy["displayName"]}...')
         _logger.debug(f"Policy: {policy}")
-        response = create_policy(access_token, policy)
+        response = policies_api.create(policy)
         if response.success:
             click.echo("Policy created successfully")
         else:

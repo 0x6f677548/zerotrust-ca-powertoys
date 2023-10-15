@@ -7,7 +7,6 @@ from conditional_access.commands import (
     ca_group_ids_to_names
 )
 from authentication import get_access_token, ACCESS_TOKEN_OPTION
-from groups.commands import group_add_user
 
 
 @click.group(
@@ -17,7 +16,8 @@ from groups.commands import group_add_user
 )
 @click.option(
     "--log_level",
-    default="INFO",
+    default="DEBUG",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
     help="The log level to use for logging (default: INFO). Possible values: DEBUG, INFO, WARNING, ERROR, CRITICAL",
 )
 @ACCESS_TOKEN_OPTION
@@ -38,7 +38,6 @@ cli.add_command(ca_export)
 cli.add_command(ca_group_names_to_ids)
 cli.add_command(ca_cleanup_for_import)
 cli.add_command(ca_group_ids_to_names)
-cli.add_command(group_add_user)
 
 if __name__ == "__main__":
     cli(obj={})
