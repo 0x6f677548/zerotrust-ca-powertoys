@@ -16,7 +16,7 @@ def replace_with_key_value_lookup(
     parent_node: dict,
     keys_node_name: str,
     values_node_name: str,
-    lookup_func: Callable[[str], str],
+    lookup_func: Callable[[str | None], str],
     lookup_cache: dict = {},
 ) -> dict:
     """
