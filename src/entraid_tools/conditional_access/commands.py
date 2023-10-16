@@ -255,6 +255,10 @@ def ca_export(
         ctx, "access_token", access_token, get_access_token
     )
 
+    output_file = get_from_ctx_if_none(
+        ctx, "output_file", output_file, lambda: click.prompt("The output file")
+    )
+
     click.echo("Obtaining policies from tenant...")
     policies_api = PoliciesAPI(access_token=access_token)
     response = policies_api.get_all(odata_filter=filter)
