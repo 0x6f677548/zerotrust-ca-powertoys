@@ -2,3 +2,4 @@ __pycache__
 .entraid-tools.venv
 *.json
 .debug
+.coverage

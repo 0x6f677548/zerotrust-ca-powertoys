@@ -39,9 +39,9 @@ def _format_policies(policies: dict) -> dict:
         policies = policies["value"]
 
     # check if we have a single policy. If so, let's wrap it in a list
-    elif policies and not isinstance(policies, list) and "displayName" in policies:
+    elif policies and not isinstance(policies, list):
         policies = [policies]
-    elif not policies or not isinstance(policies, list):
+    elif not policies:
         raise Exception(
             "The policies file is not in the expected format. Please check the documentation."
         )

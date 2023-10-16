@@ -12,7 +12,7 @@ import test_data
 import json
 
 
-def assert_valid_policies_file(output_file):
+def _assert_valid_policies_file(output_file):
     # check if file exists
     assert os.path.isfile(output_file)
     # check if file is not empty
@@ -25,10 +25,11 @@ def assert_valid_policies_file(output_file):
         assert data
 
         # check if file contains the expected data
-        # check if value is a list
-        assert isinstance(data, list)
-        # check if it contains any policies
-        assert len(data) > 0
+        # check if value is a single policy or is a list with a policy
+
+        assert "displayName" in data or (
+            isinstance(data, list) and len(data) > 0 and "displayName" in data[0]
+        )
 
 
 def test_ca_export_no_filter(access_token: str):
@@ -47,7 +48,7 @@ def test_ca_export_no_filter(access_token: str):
         )
 
         assert result.exit_code == 0
-        assert_valid_policies_file(output_file)
+        _assert_valid_policies_file(output_file)
 
 
 def test_ca_export_filter_by_name(access_token: str):
@@ -68,7 +69,7 @@ def test_ca_export_filter_by_name(access_token: str):
         )
 
         assert result.exit_code == 0
-        assert_valid_policies_file(output_file)
+        _assert_valid_policies_file(output_file)
 
 
 def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
@@ -81,7 +82,7 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
             # convert the test data to a string
             f.write(json.dumps(test_data.policies, indent=4))
 
-        assert_valid_policies_file(test_data_file)
+        _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
             ca_group_ids_to_names,
@@ -96,7 +97,7 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
         )
         assert result is not None
         assert result.exit_code == 0
-        assert_valid_policies_file(test_data_file)
+        _assert_valid_policies_file(test_data_file)
 
         # check if the file contains the expected node
         with open(test_data_file) as f:
@@ -104,8 +105,9 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
 
             # check if the expected node is present
             assert data[0]["conditions"]["users"]["excludeGroupNames"]
-            # check if the previous node was removed
-            assert "excludeGroups" not in data[0]["conditions"]["users"]
+
+            # check if the previous node is present but with only one member
+            assert len(data[0]["conditions"]["users"]["excludeGroups"]) == 1
 
         result = runner.invoke(
             ca_group_names_to_ids,
@@ -119,7 +121,7 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
             ],
         )
         assert result.exit_code == 0
-        assert_valid_policies_file(test_data_file)
+        _assert_valid_policies_file(test_data_file)
 
         # check if the file contains the expected node
         with open(test_data_file) as f:
@@ -132,23 +134,28 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
             assert "excludeGroupNames" not in data[0]["conditions"]["users"]
 
 
-def test_ca_cleanup_for_import():
-    """Tests if the ca_cleanup_for_import command works as expected"""
+def _test_ca_cleanup_for_import(test_data_policies):
     runner = CliRunner()
 
+    # we might receive a list of policies or a single policy
+    if isinstance(test_data_policies, list):
+        first_policy = test_data_policies[0]
+    else:
+        first_policy = test_data_policies
+
     # check that the test data has id, createdDateTime and modifiedDateTime
-    assert test_data.policies[0]["id"]
-    assert test_data.policies[0]["createdDateTime"]
-    assert test_data.policies[0]["modifiedDateTime"]
+    assert "id" in first_policy
+    assert "createdDateTime" in first_policy
+    assert "modifiedDateTime" in first_policy
 
     with runner.isolated_filesystem():
         # write the test data to a file
         test_data_file = "test_data.json"
         with open(test_data_file, "w") as f:
             # convert the test data to a string
-            f.write(json.dumps(test_data.policies, indent=4))
+            f.write(json.dumps(test_data_policies, indent=4))
 
-        assert_valid_policies_file(test_data_file)
+        _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
             ca_cleanup_for_import,
@@ -161,7 +168,7 @@ def test_ca_cleanup_for_import():
         )
         assert result is not None
         assert result.exit_code == 0
-        assert_valid_policies_file(test_data_file)
+        _assert_valid_policies_file(test_data_file)
 
         # check if the file was cleaned up, by checking if the id, createdDateTime and modifiedDateTime are gone
         with open(test_data_file) as f:
@@ -171,6 +178,13 @@ def test_ca_cleanup_for_import():
             assert "id" not in data[0]
             assert "createdDateTime" not in data[0]
             assert "modifiedDateTime" not in data[0]
+
+
+def test_ca_cleanup_for_import():
+    """Tests if the ca_cleanup_for_import command works as expected"""
+
+    _test_ca_cleanup_for_import(test_data.policies)
+    _test_ca_cleanup_for_import(test_data.policies[0])
 
 
 def test_ca_import(access_token: str):
@@ -183,7 +197,7 @@ def test_ca_import(access_token: str):
             # convert the test data to a string
             f.write(json.dumps(test_data.policies, indent=4))
 
-        assert_valid_policies_file(test_data_file)
+        _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
             ca_import,
@@ -207,3 +221,25 @@ def test_ca_import(access_token: str):
 
         # clean up
         policiesAPI.delete(policies[0]["id"])
+
+
+def test_ca_import_invalid_data(access_token: str):
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        # write the test data to a file
+        test_data_file = "test_data.json"
+        with open(test_data_file, "w") as f:
+            # convert the test data to a string
+            f.write(json.dumps({}, indent=4))
+
+        result = runner.invoke(
+            ca_import,
+            [
+                "--access_token",
+                access_token,
+                "--input_file",
+                test_data_file,
+            ],
+        )
+        assert result is not None
+        assert result.exit_code == 1
