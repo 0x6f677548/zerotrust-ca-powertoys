@@ -1,12 +1,12 @@
 import click
-from conditional_access.commands import (
+from .conditional_access.commands import (
     ca_export,
     ca_import,
     ca_group_names_to_ids,
     ca_cleanup_for_import,
     ca_group_ids_to_names
 )
-from authentication import get_access_token, ACCESS_TOKEN_OPTION
+from .authentication import get_access_token, ACCESS_TOKEN_OPTION
 
 
 @click.group(
@@ -16,7 +16,7 @@ from authentication import get_access_token, ACCESS_TOKEN_OPTION
 )
 @click.option(
     "--log_level",
-    default="DEBUG",
+    default="INFO",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
     help="The log level to use for logging (default: INFO). Possible values: DEBUG, INFO, WARNING, ERROR, CRITICAL",
 )
