@@ -24,14 +24,3 @@ class GroupsAPI(EntityAPI):
         return APIResponse(
             requests.post(add_user_url, headers=self.request_headers, json=payload), 204
         )
-
-    def get_by_name(self, group_name: str) -> APIResponse:
-        """Gets the top group with the given name
-        Returns an API_Response object and the group entity is in the json property of the API_Response object
-        """
-
-        response = self.get_all(
-            odata_filter=f"displayName eq '{group_name}'", odata_top=1
-        )
-
-        return response
