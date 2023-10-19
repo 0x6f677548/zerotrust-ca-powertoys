@@ -67,7 +67,7 @@ def _save_policies(policies: dict, output_file: str):
         f.write(json.dumps(policies, indent=4))
 
 
-def _ca_policies_cleanup_for_import(source: dict) -> dict:
+def _cleanup_policies(source: dict) -> dict:
     click.echo("Cleaning up policies...")
 
     # exclude some elements, namely createdDateTime,
@@ -86,14 +86,15 @@ def _ca_policies_cleanup_for_import(source: dict) -> dict:
 
 
 @click.command(
-    "ca-ids-to-names",
-    help="Convert group ids to names in conditional access policies",
+    "replace-keys-by-values",
+    help="Replaces keys by values in conditional access policies" +
+    " (e.g. group ids by group names, user ids by user principal names, etc.)",
 )
 @click.pass_context
 @ACCESS_TOKEN_OPTION
 @OUTPUT_FILE_OPTION
 @INPUT_FILE_OPTION
-def ca_ids_to_names(
+def replace_keys_by_values(
     ctx: click.Context,
     input_file: str,
     output_file: str,
@@ -102,7 +103,7 @@ def ca_ids_to_names(
     try:
         ctx.ensure_object(dict)
         click.secho(
-            "Converting group ids to names in conditional access policies...",
+            "Replacing keys by values in conditional access policies...",
             fg="yellow",
         )
         access_token = get_from_ctx_if_none(
@@ -127,14 +128,15 @@ def ca_ids_to_names(
 
 
 @click.command(
-    "ca-names-to-ids",
-    help="Convert group names to ids in conditional access policies",
+    "replace-values-by-keys",
+    help="Replaces values by keys in conditional access policies" +
+    " (e.g. group names by group ids, user principal names by user ids, etc.)",
 )
 @click.pass_context
 @ACCESS_TOKEN_OPTION
 @OUTPUT_FILE_OPTION
 @INPUT_FILE_OPTION
-def ca_names_to_ids(
+def replace_values_by_keys(
     ctx: click.Context,
     input_file: str,
     output_file: str,
@@ -143,7 +145,7 @@ def ca_names_to_ids(
     try:
         ctx.ensure_object(dict)
         click.secho(
-            "Converting group names to ids in conditional access policies...",
+            "Replacing values by keys in conditional access policies...",
             fg="yellow",
         )
 
@@ -169,7 +171,8 @@ def ca_names_to_ids(
         exit_with_exception(e)
 
 
-@click.command("ca-export", help="Export conditional access policies")
+@click.command("export-policies", help="Exports conditional access policies with a " +
+               "filter (e.g. 'startswith(displayName, 'Test')') to a file")
 @click.pass_context
 @ACCESS_TOKEN_OPTION
 @click.option(
@@ -178,7 +181,7 @@ def ca_names_to_ids(
     default=None,
 )
 @OUTPUT_FILE_OPTION
-def ca_export(
+def export_policies(
     ctx: click.Context,
     output_file: str,
     access_token: str | None = None,
@@ -221,13 +224,14 @@ def ca_export(
 
 
 @click.command(
-    "ca-cleanup-for-import",
-    help="Cleanup conditional access policies file for import",
+    "cleanup-policies",
+    help="Cleans up conditional access policies file for import (e.g. removes " +
+    "createdDateTime, modifiedDateTime, id, templateId"
 )
 @click.pass_context
 @OUTPUT_FILE_OPTION
 @INPUT_FILE_OPTION
-def ca_cleanup_for_import(ctx: click.Context, input_file: str, output_file: str):
+def cleanup_policies(ctx: click.Context, input_file: str, output_file: str):
     try:
         ctx.ensure_object(dict)
         click.secho(
@@ -242,7 +246,7 @@ def ca_cleanup_for_import(ctx: click.Context, input_file: str, output_file: str)
         )
 
         policies = _load_policies(input_file)
-        policies = _ca_policies_cleanup_for_import(policies)
+        policies = _cleanup_policies(policies)
         _save_policies(policies=policies, output_file=output_file)
 
         # store the output file in the context for chaining commands
@@ -251,11 +255,11 @@ def ca_cleanup_for_import(ctx: click.Context, input_file: str, output_file: str)
         exit_with_exception(e)
 
 
-@click.command("ca-import", help="Import conditional access policies")
+@click.command("import-policies", help="Imports conditional access policies")
 @click.pass_context
 @ACCESS_TOKEN_OPTION
 @INPUT_FILE_OPTION
-def ca_import(ctx: click.Context, input_file: str, access_token: str | None = None):
+def import_policies(ctx: click.Context, input_file: str, access_token: str | None = None):
     try:
         ctx.ensure_object(dict)
         click.secho("Importing conditional access policies...", fg="yellow")
@@ -268,7 +272,7 @@ def ca_import(ctx: click.Context, input_file: str, access_token: str | None = No
 
         policies = _load_policies(input_file)
         # make sure the policies are cleaned up
-        policies = _ca_policies_cleanup_for_import(policies)
+        policies = _cleanup_policies(policies)
         policies = names_to_ids(access_token, policies)
         policies_api = PoliciesAPI(access_token=access_token)
 

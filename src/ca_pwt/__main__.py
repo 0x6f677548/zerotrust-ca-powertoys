@@ -1,10 +1,10 @@
 import click
 from .conditional_access.commands import (
-    ca_export,
-    ca_import,
-    ca_names_to_ids,
-    ca_cleanup_for_import,
-    ca_ids_to_names,
+    export_policies,
+    import_policies,
+    replace_values_by_keys,
+    cleanup_policies,
+    replace_keys_by_values,
 )
 from .authentication import get_access_token, ACCESS_TOKEN_OPTION
 
@@ -34,11 +34,11 @@ def cli(ctx: click.Context, access_token: str, log_level: str):
 
 
 cli.add_command(get_access_token)
-cli.add_command(ca_import)
-cli.add_command(ca_export)
-cli.add_command(ca_names_to_ids)
-cli.add_command(ca_cleanup_for_import)
-cli.add_command(ca_ids_to_names)
+cli.add_command(import_policies)
+cli.add_command(export_policies)
+cli.add_command(replace_values_by_keys)
+cli.add_command(cleanup_policies)
+cli.add_command(replace_keys_by_values)
 
 if __name__ == "__main__":
     cli(obj={})
