@@ -1,9 +1,12 @@
 import requests
 from abc import ABC, abstractmethod
+import logging
 
 
 class APIResponse:
     """A class to represent an API response"""
+
+    _logger = logging.getLogger(__name__)
 
     def __init__(
         self, request_response: requests.Response, expected_status_code: int = 200
@@ -18,14 +21,29 @@ class APIResponse:
         self.response = request_response
         self.expected_status_code = expected_status_code
         self.success = self.status_code == self.expected_status_code
+        if (self._logger.isEnabledFor(logging.DEBUG)):
+            self._logger.debug(f"Status code: {self.status_code}")
+            self._logger.debug(f"Response: {self.response.text}")
 
     def json(self):
         """Returns the JSON representation of the response"""
-        return self.response.json()
+        # check if the self.response has a json() method. If so, use it
+        if hasattr(self.response, "json"):
+            return self.response.json()
+        else:
+            return self.response
+
+    def assert_success(self):
+        """Asserts that the request was successful"""
+        assert (
+            self.success
+        ), f"Request failed with status code {self.status_code}; {self.response.json()}"
 
 
 class EntityAPI(ABC):
     """An abstract class to represent an entity in the Microsoft Graph API"""
+
+    _logger = logging.getLogger(__name__)
 
     def __init__(self, access_token: str):
         """Creates an EntityAPI object
@@ -42,6 +60,35 @@ class EntityAPI(ABC):
     def _get_entity_path(self) -> str:
         """Returns the path to the entity in the Microsoft Graph API"""
         pass
+
+    def _request_get(self, url: str) -> APIResponse:
+        """Sends a GET request to the API"""
+        self._logger.debug(f"GET {url}")
+        return APIResponse(
+            requests.get(url, headers=self.request_headers), expected_status_code=200
+        )
+
+    def _request_post(self, url: str, entity: dict) -> APIResponse:
+        """Sends a POST request to the API"""
+        self._logger.debug(f"POST {url}")
+        return APIResponse(
+            requests.post(url, headers=self.request_headers, json=entity), 201
+        )
+
+    def _request_delete(self, url: str) -> APIResponse:
+        """Sends a DELETE request to the API"""
+        self._logger.debug(f"DELETE {url}")
+        return APIResponse(
+            requests.delete(url, headers=self.request_headers), expected_status_code=204
+        )
+
+    def _request_patch(self, url: str, entity: dict) -> APIResponse:
+        """Sends a PATCH request to the API"""
+        self._logger.debug(f"PATCH {url}")
+        return APIResponse(
+            requests.patch(url, headers=self.request_headers, json=entity),
+            expected_status_code=204,
+        )
 
     def get_all(
         self,
@@ -62,36 +109,54 @@ class EntityAPI(ABC):
         if url[-1] in ["&", "?"]:
             url = url[:-1]
 
-        response = APIResponse(requests.get(url, headers=self.request_headers), 200)
-        return response
+        return self._request_get(url)
 
     def get_by_id(self, entity_id: str) -> APIResponse:
         """Returns an entity by its ID
         Entity is returned as a JSON object in the response (response.json())"""
+        assert entity_id, "entity_id cannot be None"
         url = f"{self.entity_url}/{entity_id}"
+        return self._request_get(url)
 
-        return APIResponse(
-            requests.get(url, headers=self.request_headers), expected_status_code=200
+    def get_by_display_name(self, display_name: str) -> APIResponse:
+        """Gets the top entity found with the given display name
+        Returns an API_Response object and the entity is in the json property of the API_Response object
+        """
+        assert display_name, "display_name cannot be None"
+
+        response = self.get_all(
+            odata_filter=f"displayName eq '{display_name}'", odata_top=1
         )
+
+        # if the request was successful, transform the response to a dict
+        if response.success:
+
+            # move the value property to the response property
+            value = response.json()["value"]
+            # check if we have results
+            if value == []:
+                response.success = False
+                response.status_code = 404
+                response.response = "No results found"
+            else:
+                response.response = value[0]
+
+        return response
 
     def create(self, entity: dict) -> APIResponse:
         """Creates an entity"""
-        return APIResponse(
-            requests.post(self.entity_url, headers=self.request_headers, json=entity),
-            201,
-        )
+        assert entity, "entity cannot be None"
+        return self._request_post(self.entity_url, entity)
 
     def delete(self, entity_id: str) -> APIResponse:
         """Deletes an entity by its ID"""
+        assert entity_id, "entity_id cannot be None"
         url = f"{self.entity_url}/{entity_id}"
-        return APIResponse(
-            requests.delete(url, headers=self.request_headers), expected_status_code=204
-        )
+        return self._request_delete(url)
 
     def update(self, entity_id: str, entity: dict) -> APIResponse:
         """Updates an entity by its ID"""
+        assert entity_id, "entity_id cannot be None"
+        assert entity, "entity cannot be None"
         url = f"{self.entity_url}/{entity_id}"
-        return APIResponse(
-            requests.patch(url, headers=self.request_headers, json=entity),
-            expected_status_code=204,
-        )
+        return self._request_patch(url, entity)

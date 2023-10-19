@@ -1,7 +1,7 @@
 from src.entraid_tools.conditional_access.commands import (
     ca_export,
-    ca_group_ids_to_names,
-    ca_group_names_to_ids,
+    ca_ids_to_names,
+    ca_names_to_ids,
     ca_cleanup_for_import,
     ca_import,
 )
@@ -72,8 +72,8 @@ def test_ca_export_filter_by_name(access_token: str):
         _assert_valid_policies_file(output_file)
 
 
-def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
-    """Tests if the ca_group_ids_to_names command works as expected"""
+def test_ca_ids_to_names_ca_names_to_ids(access_token: str):
+    """Tests if the ca_ids_to_names command works as expected"""
     runner = CliRunner()
     with runner.isolated_filesystem():
         # write the test data to a file
@@ -85,7 +85,7 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
         _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
-            ca_group_ids_to_names,
+            ca_ids_to_names,
             [
                 "--access_token",
                 access_token,
@@ -105,12 +105,27 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
 
             # check if the expected node is present
             assert data[0]["conditions"]["users"]["excludeGroupNames"]
-
             # check if the previous node is present but with only one member
+            # (an invalid one that wasn't able to be converted)
             assert len(data[0]["conditions"]["users"]["excludeGroups"]) == 1
 
+            assert data[0]["conditions"]["users"]["includeGroupNames"]
+            assert "includeGroups" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["excludeUserNames"]
+            assert "excludeUsers" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["includeUserNames"]
+            assert "includeUsers" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["excludeRoleNames"]
+            assert "excludeRoles" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["includeRoleNames"]
+            assert "includeRoles" not in data[0]["conditions"]["users"]
+
         result = runner.invoke(
-            ca_group_names_to_ids,
+            ca_names_to_ids,
             [
                 "--access_token",
                 access_token,
@@ -129,9 +144,23 @@ def test_ca_group_ids_to_names_ca_group_names_to_ids(access_token: str):
 
             # check if the expected node is present
             assert data[0]["conditions"]["users"]["excludeGroups"]
-
             # check if the previous node was removed
             assert "excludeGroupNames" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["includeGroups"]
+            assert "includeGroupNames" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["excludeUsers"]
+            assert "excludeUserNames" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["includeUsers"]
+            assert "includeUserNames" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["excludeRoles"]
+            assert "excludeRoleNames" not in data[0]["conditions"]["users"]
+
+            assert data[0]["conditions"]["users"]["includeRoles"]
+            assert "includeRoleNames" not in data[0]["conditions"]["users"]
 
 
 def _test_ca_cleanup_for_import(test_data_policies):
@@ -241,5 +270,22 @@ def test_ca_import_invalid_data(access_token: str):
                 test_data_file,
             ],
         )
+        assert result is not None
+        assert result.exit_code == 1
+
+        with open(test_data_file, "w") as f:
+            # convert the test data to a string
+            f.write(json.dumps(test_data.invalid_policies, indent=4))
+
+        result = runner.invoke(
+            ca_import,
+            [
+                "--access_token",
+                access_token,
+                "--input_file",
+                test_data_file,
+            ],
+        )
+
         assert result is not None
         assert result.exit_code == 1

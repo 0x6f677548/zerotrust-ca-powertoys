@@ -18,24 +18,25 @@ policies: dict = [
                 "includeAuthenticationContextClassReferences": [],
             },
             "users": {
-                "includeUsers": ["All"],
-                "excludeUsers": [],
-                "includeGroups": [],
-                "excludeGroups": [
+                "includeRoles": [
+                    "9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3"
+                ],
+                "excludeRoles": [
+                    "ffd52fa5-98dc-465c-991d-fc073eb59f8f"
+                ],
+                "excludeUsers": [
+                    "084f9c81-52d2-4f55-b328-1a8d03697ebe"
+                ],
+                "includeUsers": [
+                    "9ea4c2d7-c87a-4cb9-b04f-75e7cfcff039",
+                ],
+                "includeGroups": [
                     "9ae4a47f-c5e0-4d45-9948-8122a9b4e223",
-                    "9cd8fcf0-8e52-4197-84fb-4d6a7e652c8e",
-                    "d6660988-6fbb-44d8-8a36-5a21cf112a3b",
-                    "d2118482-ca23-4d10-bb9d-9f42feba81e0",
-                    "50eff093-29c4-4157-830f-5dba69e311f8",
-                    "3e9053c7-8578-45ea-bc88-8ff343b5b32d",
-                    "289d62fc-bd54-42c4-93f7-cd90f7652eef",
-                    "70e962c3-5653-4359-b568-8316aa47d2ef",
-                    "c04acbbf-53e5-4fbb-bf21-a607253d37a3",
+                ],
+                "excludeGroups": [
                     "47eec19a-ec26-4e26-9924-a538d2c33e9d",
                     "00000000-0000-0000-0000-000000000000"
                 ],
-                "includeRoles": [],
-                "excludeRoles": [],
             },
             "platforms": {"includePlatforms": ["all"], "excludePlatforms": []},
         },
@@ -48,3 +49,22 @@ policies: dict = [
         },
     }
 ]
+
+invalid_policies: dict = [
+    {
+        "displayNames": "ca-test",
+        "conditions": {
+            "users": {
+                "includeUsers": [],
+                "excludeUsers": [],
+                "includeGroups": [],
+                "excludeGroups": [],
+                "includeRoles": [],
+                "excludeRoles": [],
+            }
+        },
+        "grantControls": {
+        }
+    }
+]
+

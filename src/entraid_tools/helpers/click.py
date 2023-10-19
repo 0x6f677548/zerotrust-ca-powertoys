@@ -1,5 +1,9 @@
 from typing import Callable
 import click
+from sys import exit
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 def get_from_ctx_if_none(
@@ -18,3 +22,16 @@ def get_from_ctx_if_none(
     else:
         result = ctx.invoke(invoke_func)
         return result
+
+
+def exit_with_exception(exception: Exception, exit_code: int = 1, fg: str = "red"):
+    """Exit the program with an exception and exit code"""
+    try:
+        _logger.exception(exception)
+        click.secho(
+            "An error occurred. See the log for more details. (--log_level ERROR). Exiting... "
+            + f"(Exception Type: {type(exception).__name__}); (Exception: {exception})",
+            fg=fg,
+        )
+    finally:
+        exit(exit_code)

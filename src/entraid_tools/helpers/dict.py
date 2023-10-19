@@ -14,9 +14,8 @@ def remove_element_from_dict(dict: dict, element: str) -> bool:
 
 def replace_with_key_value_lookup(
     parent_node: dict,
-    keys_node_name: str,
-    values_node_name: str,
-    lookup_func: Callable[[str | None], str],
+    key_value_pairs: list[tuple[str, str]],
+    lookup_func: Callable[[str | None], str | None],
     lookup_cache: dict = {},
 ) -> dict:
     """
@@ -24,44 +23,47 @@ def replace_with_key_value_lookup(
     the node with the name keys_node_name, but looked up with the lookup_func.
     Usefull for replacing groupIds with groupNames (or vice versa) and similar scenarios.
     """
-    if keys_node_name in parent_node:
 
-        # create the values node if it doesn't exist
-        if values_node_name not in parent_node:
-            parent_node[values_node_name] = []
+    for keys_node_name, values_node_name in key_value_pairs:
+        _logger.debug(f"Replacing {keys_node_name} with {values_node_name}...")
+        if keys_node_name in parent_node:
 
-        # this will contain the keys that have been mapped
-        mapped_elements = []
+            # create the values node if it doesn't exist
+            if values_node_name not in parent_node:
+                parent_node[values_node_name] = []
 
-        keys = parent_node[keys_node_name]
-        for key in keys:
-            if key in lookup_cache:
-                value = lookup_cache[key]
-                _logger.debug(f"Found {key} in cache: {value}")
-            else:
-                _logger.debug(f"Looking up {key}...")
-                value = lookup_func(key)
-                lookup_cache[key] = value
+            # this will contain the keys that have been mapped
+            mapped_elements = []
 
-            # we'll only add the value if it's not None
-            if value:
-                parent_node[values_node_name].append(value)
-                mapped_elements.append(key)
+            keys = parent_node[keys_node_name]
+            for key in keys:
+                if key in lookup_cache:
+                    value = lookup_cache[key]
+                    _logger.debug(f"Found {key} in cache: {value}")
+                else:
+                    _logger.debug(f"Looking up {key}...")
+                    value = lookup_func(key)
+                    lookup_cache[key] = value
 
-        # remove all keys that have been mapped
-        for key in mapped_elements:
-            keys.remove(key)
+                # we'll only add the value if it's not None
+                if value:
+                    parent_node[values_node_name].append(value)
+                    mapped_elements.append(key)
 
-        _logger.debug(f"Keys for {keys_node_name}: {keys}")
-        _logger.debug(f"values for {values_node_name}: {parent_node[values_node_name]}")
+            # remove all keys that have been mapped
+            for key in mapped_elements:
+                keys.remove(key)
 
-        # remove the keys node if it's empty
-        if not keys:
-            _logger.debug(f"Removing {keys_node_name}...")
-            parent_node.pop(keys_node_name)
+            _logger.debug(f"Keys for {keys_node_name}: {keys}")
+            _logger.debug(f"values for {values_node_name}: {parent_node[values_node_name]}")
 
-        # remove the values node if it's empty
-        if not parent_node[values_node_name]:
-            _logger.debug(f"Removing {values_node_name}...")
-            parent_node.pop(values_node_name)
+            # remove the keys node if it's empty
+            if not keys:
+                _logger.debug(f"Removing {keys_node_name}...")
+                parent_node.pop(keys_node_name)
+
+            # remove the values node if it's empty
+            if not parent_node[values_node_name]:
+                _logger.debug(f"Removing {values_node_name}...")
+                parent_node.pop(values_node_name)
     return lookup_cache

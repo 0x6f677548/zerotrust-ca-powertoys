@@ -8,7 +8,7 @@ def pytest_addoption(parser):
     parser.addoption("--username", action="store")
     parser.addoption("--password", action="store")
     parser.addoption("--scopes", action="store")
-
+    parser.addoption("--access_token", action="store")
 
 
 @fixture()
@@ -19,6 +19,8 @@ def access_token(request):
         acquire_token_interactive,
     )
 
+    access_token = request.config.getoption("--access_token")
+
     tenant_id = request.config.getoption("--tenant_id")
     client_id = request.config.getoption("--client_id")
     client_secret = request.config.getoption("--client_secret")
@@ -26,15 +28,17 @@ def access_token(request):
     password = request.config.getoption("--password")
     scopes = request.config.getoption("--scopes")
 
-    if client_secret:
-        access_token = acquire_token_by_client_secret(
+    if access_token:
+        return access_token
+    elif client_secret:
+        return acquire_token_by_client_secret(
             client_id=client_id,
             client_secret=client_secret,
             tenant_id=tenant_id,
             scopes=scopes,
         )
     elif username and password:
-        access_token = acquire_token_by_username_password(
+        return acquire_token_by_username_password(
             username=username,
             password=password,
             client_id=client_id,
@@ -42,9 +46,8 @@ def access_token(request):
             scopes=scopes,
         )
     else:
-        access_token = acquire_token_interactive(
+        return acquire_token_interactive(
             client_id=client_id,
             tenant_id=tenant_id,
             scopes=scopes,
         )
-    return access_token

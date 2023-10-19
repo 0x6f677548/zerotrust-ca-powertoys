@@ -1,10 +1,10 @@
 import click
 import logging
-from ..helpers.dict import remove_element_from_dict, replace_with_key_value_lookup
-from ..helpers.click import get_from_ctx_if_none
+from ..helpers.dict import remove_element_from_dict
+from ..helpers.click import get_from_ctx_if_none, exit_with_exception
 from .graph_api import PoliciesAPI
-from ..groups.graph_api import GroupsAPI
 from ..authentication import get_access_token, ACCESS_TOKEN_OPTION
+from .mappings import ids_to_names, names_to_ids
 
 _logger = logging.getLogger(__name__)
 
@@ -67,79 +67,6 @@ def _save_policies(policies: dict, output_file: str):
         f.write(json.dumps(policies, indent=4))
 
 
-def _names_to_ids_mapping(access_token: str, source: dict) -> dict:
-    lookup_cache: dict = {}
-
-    groups_api = GroupsAPI(access_token=access_token)
-
-    def get_group_id_by_name(name: str) -> str | None:
-        response = groups_api.get_by_name(name)
-        if response.success:
-            groups = response.json()["value"]
-            if len(groups) == 0:
-                return None
-            else:
-                return groups[0]["id"]
-        else:
-            return None
-
-    for policy in source:
-        # let's transform groupIds to groupNames if any
-        conditions = policy["conditions"]
-        users = conditions["users"]
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            keys_node_name="excludeGroupNames",
-            values_node_name="excludeGroups",
-            lookup_func=get_group_id_by_name,
-            lookup_cache=lookup_cache,
-        )
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            keys_node_name="includeGroupNames",
-            values_node_name="includeGroups",
-            lookup_func=get_group_id_by_name,
-            lookup_cache=lookup_cache,
-        )
-
-    return source
-
-
-def _ids_to_names_mapping(access_token: str, source: dict) -> dict:
-    lookup_cache = {}
-
-    groups_api: GroupsAPI = GroupsAPI(access_token)
-
-    def get_group_name_by_id(id: str) -> str | None:
-        response = groups_api.get_by_id(id)
-        if response.success:
-            group = response.json()
-            return group["displayName"]
-        else:
-            return None
-
-    for policy in source:
-        # let's transform groupIds to groupNames if any
-        conditions = policy["conditions"]
-        users = conditions["users"]
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            keys_node_name="excludeGroups",
-            values_node_name="excludeGroupNames",
-            lookup_func=get_group_name_by_id,
-            lookup_cache=lookup_cache,
-        )
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            keys_node_name="includeGroups",
-            values_node_name="includeGroupNames",
-            lookup_func=get_group_name_by_id,
-            lookup_cache=lookup_cache,
-        )
-
-    return source
-
-
 def _ca_policies_cleanup_for_import(source: dict) -> dict:
     click.echo("Cleaning up policies...")
 
@@ -159,78 +86,87 @@ def _ca_policies_cleanup_for_import(source: dict) -> dict:
 
 
 @click.command(
-    "ca-group-ids-to-names",
+    "ca-ids-to-names",
     help="Convert group ids to names in conditional access policies",
 )
 @click.pass_context
 @ACCESS_TOKEN_OPTION
 @OUTPUT_FILE_OPTION
 @INPUT_FILE_OPTION
-def ca_group_ids_to_names(
+def ca_ids_to_names(
     ctx: click.Context,
     input_file: str,
     output_file: str,
     access_token: str | None = None,
 ):
-    ctx.ensure_object(dict)
-    click.secho(
-        "Converting group ids to names in conditional access policies...", fg="yellow"
-    )
-    access_token = get_from_ctx_if_none(
-        ctx, "access_token", access_token, get_access_token
-    )
-    input_file = get_from_ctx_if_none(
-        ctx, "output_file", input_file, lambda: click.prompt("The input file")
-    )
-    output_file = get_from_ctx_if_none(
-        ctx, "output_file", output_file, lambda: click.prompt("The output file")
-    )
+    try:
+        ctx.ensure_object(dict)
+        click.secho(
+            "Converting group ids to names in conditional access policies...",
+            fg="yellow",
+        )
+        access_token = get_from_ctx_if_none(
+            ctx, "access_token", access_token, get_access_token
+        )
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
+        output_file = get_from_ctx_if_none(
+            ctx, "output_file", output_file, lambda: click.prompt("The output file")
+        )
 
-    policies = _load_policies(input_file)
-    policies = _ids_to_names_mapping(access_token, policies)
+        policies = _load_policies(input_file)
+        policies = ids_to_names(access_token, policies)
 
-    _save_policies(policies=policies, output_file=output_file)
-    # store the output file in the context for chaining commands
-    ctx.obj["output_file"] = output_file
+        _save_policies(policies=policies, output_file=output_file)
+
+        # store the output file in the context for chaining commands
+        ctx.obj["output_file"] = output_file
+    except Exception as e:
+        exit_with_exception(e)
 
 
 @click.command(
-    "ca-group-names-to-ids",
+    "ca-names-to-ids",
     help="Convert group names to ids in conditional access policies",
 )
 @click.pass_context
 @ACCESS_TOKEN_OPTION
 @OUTPUT_FILE_OPTION
 @INPUT_FILE_OPTION
-def ca_group_names_to_ids(
+def ca_names_to_ids(
     ctx: click.Context,
     input_file: str,
     output_file: str,
     access_token: str | None = None,
 ):
-    ctx.ensure_object(dict)
-    click.secho(
-        "Converting group names to ids in conditional access policies...", fg="yellow"
-    )
+    try:
+        ctx.ensure_object(dict)
+        click.secho(
+            "Converting group names to ids in conditional access policies...",
+            fg="yellow",
+        )
 
-    access_token = get_from_ctx_if_none(
-        ctx, "access_token", access_token, get_access_token
-    )
+        access_token = get_from_ctx_if_none(
+            ctx, "access_token", access_token, get_access_token
+        )
 
-    input_file = get_from_ctx_if_none(
-        ctx, "output_file", input_file, lambda: click.prompt("The input file")
-    )
-    output_file = get_from_ctx_if_none(
-        ctx, "output_file", output_file, lambda: click.prompt("The output file")
-    )
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
+        output_file = get_from_ctx_if_none(
+            ctx, "output_file", output_file, lambda: click.prompt("The output file")
+        )
 
-    policies = _load_policies(input_file)
-    policies = _names_to_ids_mapping(access_token, policies)
+        policies = _load_policies(input_file)
+        policies = names_to_ids(access_token, policies)
 
-    _save_policies(policies=policies, output_file=output_file)
+        _save_policies(policies=policies, output_file=output_file)
 
-    # store the output file in the context for chaining commands
-    ctx.obj["output_file"] = output_file
+        # store the output file in the context for chaining commands
+        ctx.obj["output_file"] = output_file
+    except Exception as e:
+        exit_with_exception(e)
 
 
 @click.command("ca-export", help="Export conditional access policies")
@@ -248,37 +184,40 @@ def ca_export(
     access_token: str | None = None,
     filter: str | None = None,
 ):
-    ctx.ensure_object(dict)
-    click.secho("Exporting conditional access policies...", fg="yellow")
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Exporting conditional access policies...", fg="yellow")
 
-    access_token = get_from_ctx_if_none(
-        ctx, "access_token", access_token, get_access_token
-    )
-
-    output_file = get_from_ctx_if_none(
-        ctx, "output_file", output_file, lambda: click.prompt("The output file")
-    )
-
-    click.echo("Obtaining policies from tenant...")
-    policies_api = PoliciesAPI(access_token=access_token)
-    response = policies_api.get_all(odata_filter=filter)
-    if not response.success:
-        click.secho(
-            f"Something went wrong while obtaining the policies: {response.status_code}",
-            fg="red",
+        access_token = get_from_ctx_if_none(
+            ctx, "access_token", access_token, get_access_token
         )
-        click.secho(response.json(), fg="red")
-        click.Abort()
 
-    policies = response.json()
+        output_file = get_from_ctx_if_none(
+            ctx, "output_file", output_file, lambda: click.prompt("The output file")
+        )
 
-    _logger.debug(f"Obtained policies: {policies}")
-    policies = _format_policies(policies)
-    _logger.debug(f"Formatted policies: {policies}")
-    _save_policies(policies=policies, output_file=output_file)
+        click.echo("Obtaining policies from tenant...")
+        policies_api = PoliciesAPI(access_token=access_token)
+        response = policies_api.get_all(odata_filter=filter)
+        if not response.success:
+            click.secho(
+                f"Something went wrong while obtaining the policies: {response.status_code}",
+                fg="red",
+            )
+            click.secho(response.json(), fg="red")
+            click.Abort()
 
-    # store the output file in the context for chaining commands
-    ctx.obj["output_file"] = output_file
+        policies = response.json()
+
+        _logger.debug(f"Obtained policies: {policies}")
+        policies = _format_policies(policies)
+        _logger.debug(f"Formatted policies: {policies}")
+        _save_policies(policies=policies, output_file=output_file)
+
+        # store the output file in the context for chaining commands
+        ctx.obj["output_file"] = output_file
+    except Exception as e:
+        exit_with_exception(e)
 
 
 @click.command(
@@ -289,22 +228,27 @@ def ca_export(
 @OUTPUT_FILE_OPTION
 @INPUT_FILE_OPTION
 def ca_cleanup_for_import(ctx: click.Context, input_file: str, output_file: str):
-    ctx.ensure_object(dict)
-    click.secho("Cleaning up conditional access policies for import...", fg="yellow")
+    try:
+        ctx.ensure_object(dict)
+        click.secho(
+            "Cleaning up conditional access policies for import...", fg="yellow"
+        )
 
-    input_file = get_from_ctx_if_none(
-        ctx, "output_file", input_file, lambda: click.prompt("The input file")
-    )
-    output_file = get_from_ctx_if_none(
-        ctx, "output_file", output_file, lambda: click.prompt("The output file")
-    )
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
+        output_file = get_from_ctx_if_none(
+            ctx, "output_file", output_file, lambda: click.prompt("The output file")
+        )
 
-    policies = _load_policies(input_file)
-    policies = _ca_policies_cleanup_for_import(policies)
-    _save_policies(policies=policies, output_file=output_file)
+        policies = _load_policies(input_file)
+        policies = _ca_policies_cleanup_for_import(policies)
+        _save_policies(policies=policies, output_file=output_file)
 
-    # store the output file in the context for chaining commands
-    ctx.obj["output_file"] = output_file
+        # store the output file in the context for chaining commands
+        ctx.obj["output_file"] = output_file
+    except Exception as e:
+        exit_with_exception(e)
 
 
 @click.command("ca-import", help="Import conditional access policies")
@@ -312,30 +256,28 @@ def ca_cleanup_for_import(ctx: click.Context, input_file: str, output_file: str)
 @ACCESS_TOKEN_OPTION
 @INPUT_FILE_OPTION
 def ca_import(ctx: click.Context, input_file: str, access_token: str | None = None):
-    ctx.ensure_object(dict)
-    click.secho("Importing conditional access policies...", fg="yellow")
-    access_token = get_from_ctx_if_none(
-        ctx, "access_token", access_token, get_access_token
-    )
-    input_file = get_from_ctx_if_none(
-        ctx, "output_file", input_file, lambda: click.prompt("The input file")
-    )
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Importing conditional access policies...", fg="yellow")
+        access_token = get_from_ctx_if_none(
+            ctx, "access_token", access_token, get_access_token
+        )
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
 
-    policies = _load_policies(input_file)
-    # make sure the policies are cleaned up
-    policies = _ca_policies_cleanup_for_import(policies)
-    policies = _names_to_ids_mapping(access_token, policies)
-    policies_api = PoliciesAPI(access_token=access_token)
+        policies = _load_policies(input_file)
+        # make sure the policies are cleaned up
+        policies = _ca_policies_cleanup_for_import(policies)
+        policies = names_to_ids(access_token, policies)
+        policies_api = PoliciesAPI(access_token=access_token)
 
-    for policy in policies:
-        click.echo(f'Creating policy {policy["displayName"]}...')
-        _logger.debug(f"Policy: {policy}")
-        response = policies_api.create(policy)
-        if response.success:
+        for policy in policies:
+            displayName = policy.get("displayName")
+            click.echo(f"Creating policy {displayName}...")
+            _logger.debug(f"Policy: {policy}")
+            response = policies_api.create(policy)
+            response.assert_success()
             click.echo("Policy created successfully")
-        else:
-            click.secho(
-                f"Something went wrong while creating the policy: {response.status_code}",
-                fg="red",
-            )
-            click.secho(response.json(), fg="red")
+    except Exception as e:
+        exit_with_exception(e)
