@@ -16,6 +16,44 @@ def _replace_with_default_if_none(
     return value
 
 
+def acquire_token(
+    tenant_id, client_id, scopes, client_secret, username, password, device_code
+):
+    if device_code:
+        import sys
+
+        access_token = acquire_token_by_device_flow(
+            sys.stderr.write,
+            sys.stderr.flush,
+            client_id=client_id,
+            tenant_id=tenant_id,
+            scopes=scopes,
+        )
+    elif client_secret:
+        access_token = acquire_token_by_client_secret(
+            client_id=client_id,
+            client_secret=client_secret,
+            tenant_id=tenant_id,
+            scopes=scopes,
+        )
+    elif username and password:
+        access_token = acquire_token_by_username_password(
+            username=username,
+            password=password,
+            client_id=client_id,
+            tenant_id=tenant_id,
+            scopes=scopes,
+        )
+    else:
+        access_token = acquire_token_interactive(
+            client_id=client_id,
+            tenant_id=tenant_id,
+            scopes=scopes,
+        )
+
+    return access_token
+
+
 def acquire_token_interactive(
     client_id: str = DEFAULT_CLIENT_ID,
     tenant_id: str = COMMON_TENANT_ID,

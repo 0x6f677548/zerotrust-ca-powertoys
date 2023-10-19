@@ -1,4 +1,4 @@
-from ..helpers.graph_api import APIResponse, EntityAPI
+from .helpers.graph_api import APIResponse, EntityAPI
 
 
 class UsersAPI(EntityAPI):

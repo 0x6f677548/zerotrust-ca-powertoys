@@ -1,3 +1,40 @@
+from .helpers.graph_api import EntityAPI, APIResponse
+
+
+class DirectoryRolesAPI(EntityAPI):
+    def _get_entity_path(self) -> str:
+        return "directoryRoles"
+
+
+class DirectoryRoleTemplatesAPI(EntityAPI):
+    def _get_entity_path(self) -> str:
+        return "directoryRoleTemplates"
+
+    def get_by_display_name(self, display_name: str) -> APIResponse:
+        """Returns a directory role template by its display name"""
+
+        assert display_name, "display_name cannot be None"
+
+        # this entity does not support filters neither page size, so we'll have to
+        # get all the entities and filter them ourselves
+
+        response = self.get_all()
+
+        if response.success:
+            # move the value property to the response property
+            response.response = response.json()["value"]
+            for entity in response.response:
+                if entity["displayName"] == display_name:
+                    response.response = entity
+                    return response
+
+            response.success = False
+            response.status_code = 404
+            response.response = "No results found"
+
+        return response
+
+
 ID_TO_NAME_MAPPING = {
     "9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3": "Application Administrator",
     "cf1c38e5-3621-4004-a7cb-879624dced7c": "Application Developer",

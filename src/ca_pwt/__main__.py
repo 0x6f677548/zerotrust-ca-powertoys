@@ -1,12 +1,13 @@
 import click
-from .conditional_access.commands import (
-    export_policies,
-    import_policies,
-    replace_values_by_keys,
-    cleanup_policies,
-    replace_keys_by_values,
+from .commands import (
+    export_policies_cmd,
+    import_policies_cmd,
+    replace_values_by_keys_cmd,
+    cleanup_policies_cmd,
+    replace_keys_by_values_cmd,
+    get_access_token_cmd,
+    ACCESS_TOKEN_OPTION,
 )
-from .authentication import get_access_token, ACCESS_TOKEN_OPTION
 
 
 @click.group(
@@ -33,12 +34,12 @@ def cli(ctx: click.Context, access_token: str, log_level: str):
     pass
 
 
-cli.add_command(get_access_token)
-cli.add_command(import_policies)
-cli.add_command(export_policies)
-cli.add_command(replace_values_by_keys)
-cli.add_command(cleanup_policies)
-cli.add_command(replace_keys_by_values)
+cli.add_command(get_access_token_cmd)
+cli.add_command(import_policies_cmd)
+cli.add_command(export_policies_cmd)
+cli.add_command(replace_values_by_keys_cmd)
+cli.add_command(cleanup_policies_cmd)
+cli.add_command(replace_keys_by_values_cmd)
 
 if __name__ == "__main__":
     cli(obj={})

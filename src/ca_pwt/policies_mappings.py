@@ -1,12 +1,10 @@
 import logging
-import click
-from ..helpers.dict import replace_with_key_value_lookup
-from ..groups.graph_api import GroupsAPI
-from ..users.graph_api import UsersAPI
-from ..directory_roles.graph_api import DirectoryRolesAPI, DirectoryRoleTemplatesAPI
+from .helpers.dict import replace_with_key_value_lookup
+from .groups import GroupsAPI
+from .users import UsersAPI
+from .directory_roles import DirectoryRolesAPI, DirectoryRoleTemplatesAPI, ID_TO_NAME_MAPPING, NAME_TO_ID_MAPPING
 from typing import Callable
-from ..helpers.graph_api import APIResponse
-from ..directory_roles.builtin import ID_TO_NAME_MAPPING, NAME_TO_ID_MAPPING
+from .helpers.graph_api import APIResponse
 
 _logger = logging.getLogger(__name__)
 
@@ -25,8 +23,8 @@ def _graph_api_lookup(
     return None
 
 
-def names_to_ids(access_token: str, source: dict) -> dict:
-    click.echo("Converting names to ids...")
+def values_to_keys(access_token: str, source: dict) -> dict:
+    _logger.info("Converting values to keys...")
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {source}")
@@ -89,8 +87,8 @@ def names_to_ids(access_token: str, source: dict) -> dict:
     return source
 
 
-def ids_to_names(access_token: str, source: dict) -> dict:
-    click.echo("Converting ids to names...")
+def keys_to_values(access_token: str, source: dict) -> dict:
+    _logger.info("Converting keys to values...")
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {source}")

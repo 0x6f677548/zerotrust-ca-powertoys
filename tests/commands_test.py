@@ -1,14 +1,14 @@
-from src.ca_pwt.conditional_access.commands import (
-    export_policies,
-    replace_keys_by_values,
-    replace_values_by_keys,
-    cleanup_policies,
-    import_policies,
+from src.ca_pwt.commands import (
+    export_policies_cmd,
+    replace_keys_by_values_cmd,
+    replace_values_by_keys_cmd,
+    cleanup_policies_cmd,
+    import_policies_cmd,
 )
-from src.ca_pwt.conditional_access.graph_api import PoliciesAPI
+from src.ca_pwt.policies import PoliciesAPI
 from click.testing import CliRunner
 import os
-import test_data
+from .test_data import valid_policies, invalid_policies
 import json
 
 
@@ -38,7 +38,7 @@ def test_ca_export_no_filter(access_token: str):
     with runner.isolated_filesystem():
         output_file = "ca_export.json"
         result = runner.invoke(
-            export_policies,
+            export_policies_cmd,
             [
                 "--access_token",
                 access_token,
@@ -57,7 +57,7 @@ def test_ca_export_filter_by_name(access_token: str):
     with runner.isolated_filesystem():
         output_file = "ca_export.json"
         result = runner.invoke(
-            export_policies,
+            export_policies_cmd,
             [
                 "--access_token",
                 access_token,
@@ -80,12 +80,12 @@ def test_ca_ids_to_names_ca_names_to_ids(access_token: str):
         test_data_file = "test_data.json"
         with open(test_data_file, "w") as f:
             # convert the test data to a string
-            f.write(json.dumps(test_data.policies, indent=4))
+            f.write(json.dumps(valid_policies, indent=4))
 
         _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
-            replace_keys_by_values,
+            replace_keys_by_values_cmd,
             [
                 "--access_token",
                 access_token,
@@ -125,7 +125,7 @@ def test_ca_ids_to_names_ca_names_to_ids(access_token: str):
             assert "includeRoles" not in data[0]["conditions"]["users"]
 
         result = runner.invoke(
-            replace_values_by_keys,
+            replace_values_by_keys_cmd,
             [
                 "--access_token",
                 access_token,
@@ -187,7 +187,7 @@ def _test_ca_cleanup_for_import(test_data_policies):
         _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
-            cleanup_policies,
+            cleanup_policies_cmd,
             [
                 "--input_file",
                 test_data_file,
@@ -212,8 +212,8 @@ def _test_ca_cleanup_for_import(test_data_policies):
 def test_ca_cleanup_for_import():
     """Tests if the ca_cleanup_for_import command works as expected"""
 
-    _test_ca_cleanup_for_import(test_data.policies)
-    _test_ca_cleanup_for_import(test_data.policies[0])
+    _test_ca_cleanup_for_import(valid_policies)
+    _test_ca_cleanup_for_import(valid_policies[0])
 
 
 def test_ca_import(access_token: str):
@@ -224,12 +224,12 @@ def test_ca_import(access_token: str):
         test_data_file = "test_data.json"
         with open(test_data_file, "w") as f:
             # convert the test data to a string
-            f.write(json.dumps(test_data.policies, indent=4))
+            f.write(json.dumps(valid_policies, indent=4))
 
         _assert_valid_policies_file(test_data_file)
 
         result = runner.invoke(
-            import_policies,
+            import_policies_cmd,
             [
                 "--access_token",
                 access_token,
@@ -262,7 +262,7 @@ def test_ca_import_invalid_data(access_token: str):
             f.write(json.dumps({}, indent=4))
 
         result = runner.invoke(
-            import_policies,
+            import_policies_cmd,
             [
                 "--access_token",
                 access_token,
@@ -275,10 +275,10 @@ def test_ca_import_invalid_data(access_token: str):
 
         with open(test_data_file, "w") as f:
             # convert the test data to a string
-            f.write(json.dumps(test_data.invalid_policies, indent=4))
+            f.write(json.dumps(invalid_policies, indent=4))
 
         result = runner.invoke(
-            import_policies,
+            import_policies_cmd,
             [
                 "--access_token",
                 access_token,

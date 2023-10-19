@@ -1,5 +1,5 @@
 import requests
-from ..helpers.graph_api import APIResponse, EntityAPI
+from .helpers.graph_api import APIResponse, EntityAPI
 
 
 class GroupsAPI(EntityAPI):
