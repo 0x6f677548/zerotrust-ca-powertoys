@@ -1,4 +1,4 @@
-from src.entraid_tools.groups.graph_api import GroupsAPI
+from src.ca_pwt.groups.graph_api import GroupsAPI
 import pytest
 
 

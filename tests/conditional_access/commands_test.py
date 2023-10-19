@@ -1,11 +1,11 @@
-from src.entraid_tools.conditional_access.commands import (
+from src.ca_pwt.conditional_access.commands import (
     ca_export,
     ca_ids_to_names,
     ca_names_to_ids,
     ca_cleanup_for_import,
     ca_import,
 )
-from src.entraid_tools.conditional_access.graph_api import PoliciesAPI
+from src.ca_pwt.conditional_access.graph_api import PoliciesAPI
 from click.testing import CliRunner
 import os
 import test_data

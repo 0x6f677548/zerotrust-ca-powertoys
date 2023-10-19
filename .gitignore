@@ -1,5 +1,5 @@
 __pycache__
-.entraid-tools.venv
+*.venv
 *.json
 .debug
 .coverage

@@ -13,7 +13,7 @@ def pytest_addoption(parser):
 
 @fixture()
 def access_token(request):
-    from src.entraid_tools.authentication.auth_lib import (
+    from src.ca_pwt.authentication.auth_lib import (
         acquire_token_by_client_secret,
         acquire_token_by_username_password,
         acquire_token_interactive,

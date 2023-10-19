@@ -1,4 +1,4 @@
-# EntraID-Tools
+# Conditional Access PowerToys (CA-PowerToys)
 
 ## Usage Examples
 
@@ -48,9 +48,9 @@ You can also define oData filters to export only a subset of the policies. In th
     Writing policies to file policies.json...
     ```
 
-### Using EntraID-Tools to export policies and import them using Graph PowerShell
+### Using CA-PowerToys to export policies and import them using Graph PowerShell
 
-You can use EntraID-Tools to export policies in a compatible format with Graph PowerShell. This is useful if you want to export policies from one tenant and import them into another tenant. 
+You can use CA-PowerToys to export policies in a compatible format with Graph PowerShell. This is useful if you want to export policies from one tenant and import them into another tenant. 
 
 This example chains the ca-export and ca-cleanup-for-import commands to export the policies and clean them up for import. The output is stored in the policies.json file. Then we read the policies from the file and import them using the New-MgIdentityConditionalAccessPolicy command. 
 
