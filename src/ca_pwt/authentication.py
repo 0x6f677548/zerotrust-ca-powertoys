@@ -1,9 +1,9 @@
 import logging
 from msal import PublicClientApplication, ConfidentialClientApplication
 
-COMMON_TENANT_ID = "common"
-DEFAULT_CLIENT_ID = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
-DEFAULT_SCOPES = ["https://graph.microsoft.com/.default"]
+_common_tenant_id = "common"
+_default_client_id = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+_default_scopes = ["https://graph.microsoft.com/.default"]
 
 _logger = logging.getLogger(__name__)
 
@@ -17,8 +17,22 @@ def _replace_with_default_if_none(
 
 
 def acquire_token(
-    tenant_id, client_id, scopes, client_secret, username, password, device_code
-):
+    tenant_id: str = _common_tenant_id,
+    client_id: str = _default_client_id,
+    scopes: list[str] = _default_scopes,
+    client_secret: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
+    device_code: bool = False,
+) -> str:
+    """Acquire an access token using the specified authentication method
+    if no authentication method is specified, the interactive method will be used
+    Order of precedence:
+    1. device_code
+    2. client_secret
+    3. username/password
+    4. interactive
+    """
     if device_code:
         import sys
 
@@ -55,13 +69,14 @@ def acquire_token(
 
 
 def acquire_token_interactive(
-    client_id: str = DEFAULT_CLIENT_ID,
-    tenant_id: str = COMMON_TENANT_ID,
-    scopes: list[str] = DEFAULT_SCOPES,
+    client_id: str = _default_client_id,
+    tenant_id: str = _common_tenant_id,
+    scopes: list[str] = _default_scopes,
 ) -> str:
-    client_id = _replace_with_default_if_none(client_id, DEFAULT_CLIENT_ID)
-    tenant_id = _replace_with_default_if_none(tenant_id, COMMON_TENANT_ID)
-    scopes = _replace_with_default_if_none(scopes, DEFAULT_SCOPES)
+    """Acquire an access token interactively"""
+    client_id = _replace_with_default_if_none(client_id, _default_client_id)
+    tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
+    scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
     app = PublicClientApplication(
         client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
@@ -78,11 +93,12 @@ def acquire_token_interactive(
 def acquire_token_by_client_secret(
     client_id: str,
     client_secret: str,
-    tenant_id: str = COMMON_TENANT_ID,
-    scopes: list[str] = DEFAULT_SCOPES,
+    tenant_id: str = _common_tenant_id,
+    scopes: list[str] = _default_scopes,
 ) -> str:
-    tenant_id = _replace_with_default_if_none(tenant_id, COMMON_TENANT_ID)
-    scopes = _replace_with_default_if_none(scopes, DEFAULT_SCOPES)
+    """Acquire an access token using the client secret"""
+    tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
+    scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
     app = ConfidentialClientApplication(
         client_id=client_id,
@@ -103,11 +119,12 @@ def acquire_token_by_username_password(
     username: str,
     password: str,
     tenant_id: str,
-    client_id: str = DEFAULT_CLIENT_ID,
-    scopes: list[str] = DEFAULT_SCOPES,
+    client_id: str = _default_client_id,
+    scopes: list[str] = _default_scopes,
 ) -> str:
-    client_id = _replace_with_default_if_none(client_id, DEFAULT_CLIENT_ID)
-    scopes = _replace_with_default_if_none(scopes, DEFAULT_SCOPES)
+    """Acquire an access token using the username and password"""
+    client_id = _replace_with_default_if_none(client_id, _default_client_id)
+    scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
     app = PublicClientApplication(
         client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
@@ -126,15 +143,16 @@ def acquire_token_by_username_password(
 def acquire_token_by_device_flow(
     stdout_callback: callable,
     stdout_flush: callable,
-    client_id: str = DEFAULT_CLIENT_ID,
-    tenant_id: str = COMMON_TENANT_ID,
-    scopes: list[str] = DEFAULT_SCOPES,
+    client_id: str = _default_client_id,
+    tenant_id: str = _common_tenant_id,
+    scopes: list[str] = _default_scopes,
 ) -> str:
+    """Acquire an access token using the device flow"""
     import json
 
-    client_id = _replace_with_default_if_none(client_id, DEFAULT_CLIENT_ID)
-    tenant_id = _replace_with_default_if_none(tenant_id, COMMON_TENANT_ID)
-    scopes = _replace_with_default_if_none(scopes, DEFAULT_SCOPES)
+    client_id = _replace_with_default_if_none(client_id, _default_client_id)
+    tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
+    scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
     app = PublicClientApplication(
         client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"

@@ -32,11 +32,11 @@ def _assert_valid_policies_file(output_file):
         )
 
 
-def test_ca_export_no_filter(access_token: str):
-    """Test if the ca_export command works as expected (no filter)"""
+def test_export_policies_no_filter(access_token: str):
+    """Test if the export-policies command works as expected (no filter)"""
     runner = CliRunner()
     with runner.isolated_filesystem():
-        output_file = "ca_export.json"
+        output_file = "export-policies.json"
         result = runner.invoke(
             export_policies_cmd,
             [
@@ -51,11 +51,11 @@ def test_ca_export_no_filter(access_token: str):
         _assert_valid_policies_file(output_file)
 
 
-def test_ca_export_filter_by_name(access_token: str):
-    """Test if the ca_export command works as expected (filter by name)"""
+def test_export_policies_filter_by_name(access_token: str):
+    """Test if the export-policies command works as expected (filter by name)"""
     runner = CliRunner()
     with runner.isolated_filesystem():
-        output_file = "ca_export.json"
+        output_file = "export-policies.json"
         result = runner.invoke(
             export_policies_cmd,
             [
@@ -72,8 +72,8 @@ def test_ca_export_filter_by_name(access_token: str):
         _assert_valid_policies_file(output_file)
 
 
-def test_ca_ids_to_names_ca_names_to_ids(access_token: str):
-    """Tests if the ca_ids_to_names command works as expected"""
+def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
+    """Tests if the replace command works as expected"""
     runner = CliRunner()
     with runner.isolated_filesystem():
         # write the test data to a file
@@ -163,7 +163,7 @@ def test_ca_ids_to_names_ca_names_to_ids(access_token: str):
             assert "includeRoleNames" not in data[0]["conditions"]["users"]
 
 
-def _test_ca_cleanup_for_import(test_data_policies):
+def _test_cleanup_policies(test_data_policies):
     runner = CliRunner()
 
     # we might receive a list of policies or a single policy
@@ -209,15 +209,15 @@ def _test_ca_cleanup_for_import(test_data_policies):
             assert "modifiedDateTime" not in data[0]
 
 
-def test_ca_cleanup_for_import():
-    """Tests if the ca_cleanup_for_import command works as expected"""
+def test_cleanup_policies():
+    """Tests if the cleanup-policies command works as expected"""
 
-    _test_ca_cleanup_for_import(valid_policies)
-    _test_ca_cleanup_for_import(valid_policies[0])
+    _test_cleanup_policies(valid_policies)
+    _test_cleanup_policies(valid_policies[0])
 
 
-def test_ca_import(access_token: str):
-    """Tests if the ca_import command works as expected"""
+def test_import_policies(access_token: str):
+    """Tests if the import-policies command works as expected"""
     runner = CliRunner()
     with runner.isolated_filesystem():
         # write the test data to a file
@@ -252,7 +252,7 @@ def test_ca_import(access_token: str):
         policiesAPI.delete(policies[0]["id"])
 
 
-def test_ca_import_invalid_data(access_token: str):
+def test_import_policies_invalid_data(access_token: str):
     runner = CliRunner()
     with runner.isolated_filesystem():
         # write the test data to a file

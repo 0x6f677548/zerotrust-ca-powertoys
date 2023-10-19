@@ -6,7 +6,7 @@ from .commands import (
     cleanup_policies_cmd,
     replace_keys_by_values_cmd,
     get_access_token_cmd,
-    ACCESS_TOKEN_OPTION,
+    _access_token_option,
 )
 
 
@@ -21,7 +21,7 @@ from .commands import (
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
     help="The log level to use for logging (default: INFO). Possible values: DEBUG, INFO, WARNING, ERROR, CRITICAL",
 )
-@ACCESS_TOKEN_OPTION
+@_access_token_option
 @click.pass_context
 def cli(ctx: click.Context, access_token: str, log_level: str):
     ctx.ensure_object(dict)

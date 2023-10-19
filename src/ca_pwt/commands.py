@@ -15,20 +15,20 @@ from .policies_mappings import keys_to_values, values_to_keys
 _logger = logging.getLogger(__name__)
 
 
-CLIENT_ID_OPTION = click.option(
+_client_id_option = click.option(
     "--client_id",
     prompt="Your client ID",
     prompt_required=False,
     help="The client ID of this Azure AD app "
     + "(leave blank if you want to use Graph Command Line Tools)",
 )
-TENANT_ID_OPTION = click.option(
+_tenant_id_option = click.option(
     "--tenant_id",
     prompt="Your tenant ID",
     prompt_required=False,
     help="The tenant ID (leave blank if you want to use the default tenant of your user)",
 )
-CLIENT_SECRET_OPTION = click.option(
+_client_secret_option = click.option(
     "--client_secret",
     prompt="Your client secret",
     prompt_required=False,
@@ -36,21 +36,21 @@ CLIENT_SECRET_OPTION = click.option(
     + "(leave blank if you want to use delegated permissions with a user account)",
 )
 
-ACCESS_TOKEN_OPTION = click.option(
+_access_token_option = click.option(
     "--access_token",
     prompt="Your access token",
     prompt_required=False,
     help="The access token to use for authentication (leave blank if you want to logon interactively)",
 )
 
-USERNAME_OPTION = click.option(
+_username_option = click.option(
     "--username",
     prompt="Your username",
     prompt_required=False,
     help="The username to use for authentication (leave blank if you want to logon interactively)",
 )
 
-PASSWORD_OPTION = click.option(
+_password_option = click.option(
     "--password",
     prompt="Your password",
     hide_input=True,
@@ -58,13 +58,13 @@ PASSWORD_OPTION = click.option(
     help="The password to use for authentication (leave blank if you want to logon interactively)",
 )
 
-DEVICE_CODE_OPTION = click.option(
+_device_code_option = click.option(
     "--device_code",
     is_flag=True,
     help="Use device code authentication (leave blank if you want to logon interactively)",
 )
 
-SCOPES_OPTION = click.option(
+_scopes_option = click.option(
     "--scopes",
     prompt="The scopes to be used for authentication",
     prompt_required=False,
@@ -72,7 +72,7 @@ SCOPES_OPTION = click.option(
 )
 
 
-OUTPUT_FILE_OPTION = click.option(
+_output_file_option = click.option(
     "--output_file",
     type=click.Path(exists=False),
     prompt="The output file",
@@ -80,7 +80,7 @@ OUTPUT_FILE_OPTION = click.option(
     help="The file to write the policies to",
 )
 
-INPUT_FILE_OPTION = click.option(
+_input_file_option = click.option(
     "--input_file",
     type=click.Path(exists=False),  # although it should exists, chaining commands will fail if it does not
     prompt="The input file",
@@ -93,13 +93,13 @@ INPUT_FILE_OPTION = click.option(
     "get-access-token", help="Gets an access token to be used in other commands"
 )
 @click.pass_context
-@TENANT_ID_OPTION
-@CLIENT_ID_OPTION
-@CLIENT_SECRET_OPTION
-@USERNAME_OPTION
-@PASSWORD_OPTION
-@DEVICE_CODE_OPTION
-@SCOPES_OPTION
+@_tenant_id_option
+@_client_id_option
+@_client_secret_option
+@_username_option
+@_password_option
+@_device_code_option
+@_scopes_option
 @click.option(
     "--output_token",
     is_flag=True,
@@ -133,9 +133,9 @@ def get_access_token_cmd(
     + " (e.g. group ids by group names, user ids by user principal names, etc.)",
 )
 @click.pass_context
-@ACCESS_TOKEN_OPTION
-@OUTPUT_FILE_OPTION
-@INPUT_FILE_OPTION
+@_access_token_option
+@_output_file_option
+@_input_file_option
 def replace_keys_by_values_cmd(
     ctx: click.Context,
     input_file: str,
@@ -175,9 +175,9 @@ def replace_keys_by_values_cmd(
     + " (e.g. group names by group ids, user principal names by user ids, etc.)",
 )
 @click.pass_context
-@ACCESS_TOKEN_OPTION
-@OUTPUT_FILE_OPTION
-@INPUT_FILE_OPTION
+@_access_token_option
+@_output_file_option
+@_input_file_option
 def replace_values_by_keys_cmd(
     ctx: click.Context,
     input_file: str,
@@ -219,13 +219,13 @@ def replace_values_by_keys_cmd(
     + "filter (e.g. 'startswith(displayName, 'Test')') to a file",
 )
 @click.pass_context
-@ACCESS_TOKEN_OPTION
+@_access_token_option
 @click.option(
     "--filter",
     help="ODATA filter to apply to the policies (e.g. 'startswith(displayName, 'Test')')",
     default=None,
 )
-@OUTPUT_FILE_OPTION
+@_output_file_option
 def export_policies_cmd(
     ctx: click.Context,
     output_file: str,
@@ -259,8 +259,8 @@ def export_policies_cmd(
     + "createdDateTime, modifiedDateTime, id, templateId",
 )
 @click.pass_context
-@OUTPUT_FILE_OPTION
-@INPUT_FILE_OPTION
+@_output_file_option
+@_input_file_option
 def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
     try:
         ctx.ensure_object(dict)
@@ -287,8 +287,8 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
 
 @click.command("import-policies", help="Imports CA policies from a file")
 @click.pass_context
-@ACCESS_TOKEN_OPTION
-@INPUT_FILE_OPTION
+@_access_token_option
+@_input_file_option
 def import_policies_cmd(
     ctx: click.Context, input_file: str, access_token: str | None = None
 ):
