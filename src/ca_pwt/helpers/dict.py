@@ -4,6 +4,31 @@ from typing import Callable
 _logger = logging.getLogger(__name__)
 
 
+def cleanup_odata_dict(source: dict, ensure_list: bool = True) -> dict:
+    """Cleans up the dictionary returned by the graph api
+    It removes the @odata.context element and returns the value element if it is a list
+    If the value element is not a list, it wraps it in a list
+    """
+    remove_element_from_dict(source, "@odata.context")
+    remove_element_from_dict(source, "@microsoft.graph.tips")
+
+    # check if it is the graph api response format (i.e. a dict with a value key)
+    # if so, let's get the value and make sure it is a list
+    if (
+        "value" in source
+        and source["value"] is not None
+        and isinstance(source["value"], list)
+    ):
+        source = source["value"]
+
+    # check if we have a single policy. If so, let's wrap it in a list
+    elif ensure_list and source and not isinstance(source, list):
+        source = [source]
+    elif not source:
+        raise ValueError("The dictionary is not in the expected format.")
+    return source
+
+
 def remove_element_from_dict(dict: dict, element: str) -> bool:
     """Remove an element from a dictionary if it exists."""
     if element in dict:
@@ -27,7 +52,6 @@ def replace_with_key_value_lookup(
     for keys_node_name, values_node_name in key_value_pairs:
         _logger.debug(f"Replacing {keys_node_name} with {values_node_name}...")
         if keys_node_name in parent_node:
-
             # create the values node if it doesn't exist
             if values_node_name not in parent_node:
                 parent_node[values_node_name] = []
@@ -55,7 +79,9 @@ def replace_with_key_value_lookup(
                 keys.remove(key)
 
             _logger.debug(f"Keys for {keys_node_name}: {keys}")
-            _logger.debug(f"values for {values_node_name}: {parent_node[values_node_name]}")
+            _logger.debug(
+                f"values for {values_node_name}: {parent_node[values_node_name]}"
+            )
 
             # remove the keys node if it's empty
             if not keys:

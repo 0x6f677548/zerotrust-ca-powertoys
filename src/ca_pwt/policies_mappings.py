@@ -2,7 +2,12 @@ import logging
 from .helpers.dict import replace_with_key_value_lookup
 from .groups import GroupsAPI
 from .users import UsersAPI
-from .directory_roles import DirectoryRolesAPI, DirectoryRoleTemplatesAPI, ID_TO_NAME_MAPPING, NAME_TO_ID_MAPPING
+from .directory_roles import (
+    DirectoryRolesAPI,
+    DirectoryRoleTemplatesAPI,
+    ID_TO_NAME_MAPPING,
+    NAME_TO_ID_MAPPING,
+)
 from typing import Callable
 from .helpers.graph_api import APIResponse
 
@@ -23,7 +28,13 @@ def _graph_api_lookup(
     return None
 
 
-def values_to_keys(access_token: str, source: dict) -> dict:
+def values_to_keys(
+    access_token: str,
+    source: dict,
+    lookup_groups: bool = True,
+    lookup_users: bool = True,
+    lookup_roles: bool = True,
+) -> dict:
     _logger.info("Converting values to keys...")
 
     if _logger.isEnabledFor(logging.DEBUG):
@@ -44,42 +55,47 @@ def values_to_keys(access_token: str, source: dict) -> dict:
         # let's transform groupIds to groupNames if any
         conditions = policy["conditions"]
         users = conditions["users"]
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            key_value_pairs=[
-                ("excludeGroupNames", "excludeGroups"),
-                ("includeGroupNames", "includeGroups"),
-            ],
-            lookup_func=lambda key: _graph_api_lookup(
-                [groups_api.get_by_display_name], key, "id"
-            ),
-            lookup_cache=lookup_cache,
-        )
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            key_value_pairs=[
-                ("excludeUserNames", "excludeUsers"),
-                ("includeUserNames", "includeUsers"),
-            ],
-            lookup_func=lambda key: _graph_api_lookup([users_api.get_by_id], key, "id"),
-            lookup_cache=lookup_cache,
-        )
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            key_value_pairs=[
-                ("includeRoleNames", "includeRoles"),
-                ("excludeRoleNames", "excludeRoles"),
-            ],
-            lookup_func=lambda key: _graph_api_lookup(
-                [
-                    dir_roles_api.get_by_display_name,
-                    dir_role_templates_api.get_by_display_name,
+        if lookup_groups:
+            lookup_cache = replace_with_key_value_lookup(
+                parent_node=users,
+                key_value_pairs=[
+                    ("excludeGroupNames", "excludeGroups"),
+                    ("includeGroupNames", "includeGroups"),
                 ],
-                key,
-                "id",
-            ),
-            lookup_cache=lookup_cache,
-        )
+                lookup_func=lambda key: _graph_api_lookup(
+                    [groups_api.get_by_display_name], key, "id"
+                ),
+                lookup_cache=lookup_cache,
+            )
+        if lookup_users:
+            lookup_cache = replace_with_key_value_lookup(
+                parent_node=users,
+                key_value_pairs=[
+                    ("excludeUserNames", "excludeUsers"),
+                    ("includeUserNames", "includeUsers"),
+                ],
+                lookup_func=lambda key: _graph_api_lookup(
+                    [users_api.get_by_id], key, "id"
+                ),
+                lookup_cache=lookup_cache,
+            )
+        if lookup_roles:
+            lookup_cache = replace_with_key_value_lookup(
+                parent_node=users,
+                key_value_pairs=[
+                    ("includeRoleNames", "includeRoles"),
+                    ("excludeRoleNames", "excludeRoles"),
+                ],
+                lookup_func=lambda key: _graph_api_lookup(
+                    [
+                        dir_roles_api.get_by_display_name,
+                        dir_role_templates_api.get_by_display_name,
+                    ],
+                    key,
+                    "id",
+                ),
+                lookup_cache=lookup_cache,
+            )
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {source}")
@@ -87,7 +103,13 @@ def values_to_keys(access_token: str, source: dict) -> dict:
     return source
 
 
-def keys_to_values(access_token: str, source: dict) -> dict:
+def keys_to_values(
+    access_token: str,
+    source: dict,
+    lookup_groups: bool = True,
+    lookup_users: bool = True,
+    lookup_roles: bool = True,
+) -> dict:
     _logger.info("Converting keys to values...")
 
     if _logger.isEnabledFor(logging.DEBUG):
@@ -108,39 +130,44 @@ def keys_to_values(access_token: str, source: dict) -> dict:
         # let's transform groupIds to groupNames if any
         conditions = policy["conditions"]
         users = conditions["users"]
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            key_value_pairs=[
-                ("excludeGroups", "excludeGroupNames"),
-                ("includeGroups", "includeGroupNames"),
-            ],
-            lookup_func=lambda key: _graph_api_lookup([groups_api.get_by_id], key, "displayName"),
-            lookup_cache=lookup_cache,
-        )
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            key_value_pairs=[
-                ("excludeUsers", "excludeUserNames"),
-                ("includeUsers", "includeUserNames"),
-            ],
-            lookup_func=lambda key: _graph_api_lookup(
-                [users_api.get_by_id], key, "userPrincipalName"
-            ),
-            lookup_cache=lookup_cache,
-        )
-        lookup_cache = replace_with_key_value_lookup(
-            parent_node=users,
-            key_value_pairs=[
-                ("excludeRoles", "excludeRoleNames"),
-                ("includeRoles", "includeRoleNames"),
-            ],
-            lookup_func=lambda key: _graph_api_lookup(
-                [dir_roles_api.get_by_id, dir_role_templates_api.get_by_id],
-                key,
-                "displayName",
-            ),
-            lookup_cache=lookup_cache,
-        )
+        if lookup_groups:
+            lookup_cache = replace_with_key_value_lookup(
+                parent_node=users,
+                key_value_pairs=[
+                    ("excludeGroups", "excludeGroupNames"),
+                    ("includeGroups", "includeGroupNames"),
+                ],
+                lookup_func=lambda key: _graph_api_lookup(
+                    [groups_api.get_by_id], key, "displayName"
+                ),
+                lookup_cache=lookup_cache,
+            )
+        if lookup_users:
+            lookup_cache = replace_with_key_value_lookup(
+                parent_node=users,
+                key_value_pairs=[
+                    ("excludeUsers", "excludeUserNames"),
+                    ("includeUsers", "includeUserNames"),
+                ],
+                lookup_func=lambda key: _graph_api_lookup(
+                    [users_api.get_by_id], key, "userPrincipalName"
+                ),
+                lookup_cache=lookup_cache,
+            )
+        if lookup_roles:
+            lookup_cache = replace_with_key_value_lookup(
+                parent_node=users,
+                key_value_pairs=[
+                    ("excludeRoles", "excludeRoleNames"),
+                    ("includeRoles", "includeRoleNames"),
+                ],
+                lookup_func=lambda key: _graph_api_lookup(
+                    [dir_roles_api.get_by_id, dir_role_templates_api.get_by_id],
+                    key,
+                    "displayName",
+                ),
+                lookup_cache=lookup_cache,
+            )
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {source}")

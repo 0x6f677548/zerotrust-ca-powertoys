@@ -4,6 +4,7 @@ from src.ca_pwt.commands import (
     replace_values_by_keys_cmd,
     cleanup_policies_cmd,
     import_policies_cmd,
+    export_groups_cmd,
 )
 from src.ca_pwt.policies import PoliciesAPI
 from click.testing import CliRunner
@@ -12,7 +13,7 @@ from .test_data import valid_policies, invalid_policies
 import json
 
 
-def _assert_valid_policies_file(output_file):
+def _assert_valid_output_file(output_file):
     # check if file exists
     assert os.path.isfile(output_file)
     # check if file is not empty
@@ -48,7 +49,7 @@ def test_export_policies_no_filter(access_token: str):
         )
 
         assert result.exit_code == 0
-        _assert_valid_policies_file(output_file)
+        _assert_valid_output_file(output_file)
 
 
 def test_export_policies_filter_by_name(access_token: str):
@@ -69,7 +70,7 @@ def test_export_policies_filter_by_name(access_token: str):
         )
 
         assert result.exit_code == 0
-        _assert_valid_policies_file(output_file)
+        _assert_valid_output_file(output_file)
 
 
 def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
@@ -82,7 +83,7 @@ def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
             # convert the test data to a string
             f.write(json.dumps(valid_policies, indent=4))
 
-        _assert_valid_policies_file(test_data_file)
+        _assert_valid_output_file(test_data_file)
 
         result = runner.invoke(
             replace_keys_by_values_cmd,
@@ -97,7 +98,7 @@ def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
         )
         assert result is not None
         assert result.exit_code == 0
-        _assert_valid_policies_file(test_data_file)
+        _assert_valid_output_file(test_data_file)
 
         # check if the file contains the expected node
         with open(test_data_file) as f:
@@ -136,7 +137,7 @@ def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
             ],
         )
         assert result.exit_code == 0
-        _assert_valid_policies_file(test_data_file)
+        _assert_valid_output_file(test_data_file)
 
         # check if the file contains the expected node
         with open(test_data_file) as f:
@@ -184,7 +185,7 @@ def _test_cleanup_policies(test_data_policies):
             # convert the test data to a string
             f.write(json.dumps(test_data_policies, indent=4))
 
-        _assert_valid_policies_file(test_data_file)
+        _assert_valid_output_file(test_data_file)
 
         result = runner.invoke(
             cleanup_policies_cmd,
@@ -197,7 +198,7 @@ def _test_cleanup_policies(test_data_policies):
         )
         assert result is not None
         assert result.exit_code == 0
-        _assert_valid_policies_file(test_data_file)
+        _assert_valid_output_file(test_data_file)
 
         # check if the file was cleaned up, by checking if the id, createdDateTime and modifiedDateTime are gone
         with open(test_data_file) as f:
@@ -226,7 +227,7 @@ def test_import_policies(access_token: str):
             # convert the test data to a string
             f.write(json.dumps(valid_policies, indent=4))
 
-        _assert_valid_policies_file(test_data_file)
+        _assert_valid_output_file(test_data_file)
 
         result = runner.invoke(
             import_policies_cmd,
@@ -289,3 +290,30 @@ def test_import_policies_invalid_data(access_token: str):
 
         assert result is not None
         assert result.exit_code == 1
+
+
+def test_export_groups(access_token: str):
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        # write the test data to a file
+        test_data_file = "test_data.json"
+        with open(test_data_file, "w") as f:
+            # convert the test data to a string
+            f.write(json.dumps(valid_policies, indent=4))
+
+        output_file = "export-groups.json"
+        result = runner.invoke(
+            export_groups_cmd,
+            [
+                "--access_token",
+                access_token,
+                "--input_file",
+                test_data_file,
+                "--output_file",
+                output_file,
+            ],
+        )
+
+        assert result.exit_code == 0
+        _assert_valid_output_file(output_file)

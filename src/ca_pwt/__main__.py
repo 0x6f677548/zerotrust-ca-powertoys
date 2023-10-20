@@ -6,6 +6,9 @@ from .commands import (
     cleanup_policies_cmd,
     replace_keys_by_values_cmd,
     get_access_token_cmd,
+    export_groups_cmd,
+    import_groups_cmd,
+    cleanup_groups_cmd,
     _access_token_option,
 )
 
@@ -17,7 +20,7 @@ from .commands import (
 )
 @click.option(
     "--log_level",
-    default="CRITICAL",
+    default="WARNING",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
     help="The log level to use for logging (default: INFO). Possible values: DEBUG, INFO, WARNING, ERROR, CRITICAL",
 )
@@ -40,6 +43,9 @@ cli.add_command(export_policies_cmd)
 cli.add_command(replace_values_by_keys_cmd)
 cli.add_command(cleanup_policies_cmd)
 cli.add_command(replace_keys_by_values_cmd)
+cli.add_command(export_groups_cmd)
+cli.add_command(import_groups_cmd)
+cli.add_command(cleanup_groups_cmd)
 
 if __name__ == "__main__":
     cli(obj={})

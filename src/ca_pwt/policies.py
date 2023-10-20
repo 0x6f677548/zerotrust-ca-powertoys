@@ -1,7 +1,8 @@
 import logging
-from .helpers.dict import remove_element_from_dict
+from .helpers.dict import remove_element_from_dict, cleanup_odata_dict
 from .helpers.graph_api import EntityAPI
 from .policies_mappings import values_to_keys
+from .groups import get_groups_by_ids
 
 _logger = logging.getLogger(__name__)
 
@@ -11,28 +12,6 @@ class PoliciesAPI(EntityAPI):
         return "identity/conditionalAccess/policies"
 
 
-def _format_policies(policies: dict) -> dict:
-    remove_element_from_dict(policies, "@odata.context")
-
-    # check if it is the graph api response format (i.e. a dict with a value key)
-    # if so, let's get the value and make sure it is a list
-    if (
-        "value" in policies
-        and policies["value"] is not None
-        and isinstance(policies["value"], list)
-    ):
-        policies = policies["value"]
-
-    # check if we have a single policy. If so, let's wrap it in a list
-    elif policies and not isinstance(policies, list):
-        policies = [policies]
-    elif not policies:
-        raise Exception(
-            "The policies file is not in the expected format. Please check the documentation."
-        )
-    return policies
-
-
 def load_policies(input_file: str) -> dict:
     import json
 
@@ -40,7 +19,7 @@ def load_policies(input_file: str) -> dict:
         _logger.info(f"Reading policies from file {input_file}...")
 
         policies = json.load(f)
-        policies = _format_policies(policies)
+        policies = cleanup_odata_dict(policies, ensure_list=True)
         return policies
 
 
@@ -77,15 +56,16 @@ def export_policies(access_token: str, filter: str | None = None) -> dict:
     policies = response.json()
 
     _logger.debug(f"Obtained policies: {policies}")
-    policies = _format_policies(policies)
+    policies = cleanup_odata_dict(policies, ensure_list=True)
     _logger.debug(f"Formatted policies: {policies}")
     return policies
 
 
 def import_policies(
     access_token: str,
-    policies: dict
-) -> list((str, str)):
+    policies: dict,
+    allow_duplicates: bool = False,
+) -> list[(str, str)]:
     policies_api = PoliciesAPI(access_token=access_token)
     policies = values_to_keys(access_token, policies)
     # make sure the policies are cleaned up
@@ -93,6 +73,16 @@ def import_policies(
     created_policies = []
     for policy in policies:
         displayName = policy.get("displayName")
+
+        # check if the policy already exists
+        if not allow_duplicates:
+            existing_policy = policies_api.get_by_display_name(displayName)
+            if existing_policy.success:
+                _logger.warning(
+                    f"Policy with display name {displayName} already exists. Skipping..."
+                )
+                continue
+
         _logger.info(f"Creating policy {displayName}...")
         _logger.debug(f"Policy: {policy}")
         response = policies_api.create(policy)
@@ -102,3 +92,38 @@ def import_policies(
         created_policies.append((displayName, id))
         _logger.info("Policy created successfully with id %s", id)
     return created_policies
+
+
+def get_groups_in_policies(
+    access_token: str,
+    policies: dict,
+    ignore_not_found: bool = False,
+) -> dict:
+    """Obtains all groups referenced by the policies in the policies dict.
+    If ignore_not_found is True, groups that are not found are ignored.
+    Returns a dictionary with the groups."""
+    # make sure that all groups are in the key format
+    policies = values_to_keys(
+        access_token,
+        policies,
+        lookup_groups=True,
+        lookup_users=False,
+        lookup_roles=False,
+    )
+
+    groups_found: list[str] = []
+    for policy in policies:
+        conditions: dict = policy["conditions"]
+        users: dict = conditions["users"]
+        exclude_groups = users.get("excludeGroups")
+        if exclude_groups is not None:
+            for group in exclude_groups:
+                if group not in groups_found:
+                    groups_found.append(group)
+        include_groups = users.get("includeGroups")
+        if include_groups is not None:
+            for group in include_groups:
+                if group not in groups_found:
+                    groups_found.append(group)
+    _logger.debug(f"Groups found in policies: {groups_found}")
+    return get_groups_by_ids(access_token, groups_found, ignore_not_found)

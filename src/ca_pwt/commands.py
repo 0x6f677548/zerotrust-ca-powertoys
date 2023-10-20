@@ -8,69 +8,18 @@ from .policies import (
     cleanup_policies,
     export_policies,
     import_policies,
+    get_groups_in_policies,
+)
+from .groups import (
+    load_groups,
+    save_groups,
+    cleanup_groups,
+    import_groups,
 )
 
 from .policies_mappings import keys_to_values, values_to_keys
 
 _logger = logging.getLogger(__name__)
-
-
-_client_id_option = click.option(
-    "--client_id",
-    prompt="Your client ID",
-    prompt_required=False,
-    help="The client ID of this Azure AD app "
-    + "(leave blank if you want to use Graph Command Line Tools)",
-)
-_tenant_id_option = click.option(
-    "--tenant_id",
-    prompt="Your tenant ID",
-    prompt_required=False,
-    help="The tenant ID (leave blank if you want to use the default tenant of your user)",
-)
-_client_secret_option = click.option(
-    "--client_secret",
-    prompt="Your client secret",
-    prompt_required=False,
-    help="The client secret of your Azure AD app "
-    + "(leave blank if you want to use delegated permissions with a user account)",
-)
-
-_access_token_option = click.option(
-    "--access_token",
-    prompt="Your access token",
-    prompt_required=False,
-    help="The access token to use for authentication (leave blank if you want to logon interactively)",
-)
-
-_username_option = click.option(
-    "--username",
-    prompt="Your username",
-    prompt_required=False,
-    help="The username to use for authentication (leave blank if you want to logon interactively)",
-)
-
-_password_option = click.option(
-    "--password",
-    prompt="Your password",
-    hide_input=True,
-    prompt_required=False,
-    help="The password to use for authentication (leave blank if you want to logon interactively)",
-)
-
-_device_code_option = click.option(
-    "--device_code",
-    is_flag=True,
-    help="Use device code authentication (leave blank if you want to logon interactively)",
-)
-
-_scopes_option = click.option(
-    "--scopes",
-    prompt="The scopes to be used for authentication",
-    prompt_required=False,
-    help="The scopes to use for authentication (leave blank if you want to use the default scopes)",
-)
-
 
 _output_file_option = click.option(
     "--output_file",
@@ -82,10 +31,34 @@ _output_file_option = click.option(
 
 _input_file_option = click.option(
     "--input_file",
-    type=click.Path(exists=False),  # although it should exists, chaining commands will fail if it does not
+    type=click.Path(
+        exists=False
+    ),  # although it should exists, chaining commands will fail if it does not
     prompt="The input file",
     prompt_required=False,
     help="The file to read the policies from",
+)
+
+_access_token_option = click.option(
+    "--access_token",
+    prompt="Your access token",
+    prompt_required=False,
+    help="The access token to use for authentication (leave blank if you want to logon interactively)",
+)
+
+_ignore_not_found_option = click.option(
+    "--ignore_not_found",
+    is_flag=True,
+    default=True,
+    help="Indicates if not found errors should be ignored when exporting groups",
+)
+
+_allow_duplicates_option = click.option(
+    "--allow_duplicates",
+    is_flag=True,
+    default=False,
+    help="Indicates if duplicates should be allowed and imported. "
+    + "Duplicates are checked by comparing the displayName of Policies/Groups",
 )
 
 
@@ -93,13 +66,52 @@ _input_file_option = click.option(
     "get-access-token", help="Gets an access token to be used in other commands"
 )
 @click.pass_context
-@_tenant_id_option
-@_client_id_option
-@_client_secret_option
-@_username_option
-@_password_option
-@_device_code_option
-@_scopes_option
+@click.option(
+    "--client_id",
+    prompt="Your client ID",
+    prompt_required=False,
+    help="The client ID of this Azure AD app "
+    + "(leave blank if you want to use Graph Command Line Tools)",
+)
+@click.option(
+    "--tenant_id",
+    prompt="Your tenant ID",
+    prompt_required=False,
+    help="The tenant ID (leave blank if you want to use the default tenant of your user)",
+)
+@click.option(
+    "--client_secret",
+    prompt="Your client secret",
+    prompt_required=False,
+    help="The client secret of your Azure AD app "
+    + "(leave blank if you want to use delegated permissions with a user account)",
+)
+@click.option(
+    "--username",
+    prompt="Your username",
+    prompt_required=False,
+    help="The username to use for authentication (leave blank if you want to logon interactively)",
+)
+@click.option(
+    "--password",
+    prompt="Your password",
+    hide_input=True,
+    prompt_required=False,
+    help="The password to use for authentication (leave blank if you want to logon interactively)",
+)
+@click.option(
+    "--device_code",
+    is_flag=True,
+    help="Use device code authentication (leave blank if you want to logon interactively)",
+)
+@click.option(
+    "--scope",
+    prompt="The scopes to be used for authentication",
+    prompt_required=False,
+    multiple=True,
+    help="The scopes to use for authentication (leave blank if you want to use the default scopes)."
+    + "This parameter can be specified multiple times to specify multiple scopes",
+)
 @click.option(
     "--output_token",
     is_flag=True,
@@ -109,7 +121,7 @@ def get_access_token_cmd(
     ctx: click.Context,
     tenant_id: str,
     client_id: str,
-    scopes: list[str],
+    scope: list[str],
     client_secret: str | None = None,
     username: str | None = None,
     password: str | None = None,
@@ -118,7 +130,7 @@ def get_access_token_cmd(
 ) -> str:
     ctx.ensure_object(dict)
     access_token = acquire_token(
-        tenant_id, client_id, scopes, client_secret, username, password, device_code
+        tenant_id, client_id, scope, client_secret, username, password, device_code
     )
     # store the access token in the context for chaining commands
     ctx.obj["access_token"] = access_token
@@ -157,6 +169,7 @@ def replace_keys_by_values_cmd(
         output_file = get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
+        click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
         policies = keys_to_values(access_token, policies)
@@ -201,6 +214,7 @@ def replace_values_by_keys_cmd(
         output_file = get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
+        click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
         policies = values_to_keys(access_token, policies)
@@ -243,6 +257,7 @@ def export_policies_cmd(
         output_file = get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
+        click.echo(f"Output file: {output_file}")
 
         policies = export_policies(access_token, filter)
         save_policies(policies=policies, output_file=output_file)
@@ -264,9 +279,7 @@ def export_policies_cmd(
 def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
     try:
         ctx.ensure_object(dict)
-        click.secho(
-            "Cleaning up CA policies for import...", fg="yellow"
-        )
+        click.secho("Cleaning up CA policies for import...", fg="yellow")
 
         input_file = get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
@@ -274,6 +287,7 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
         output_file = get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
+        click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
         policies = cleanup_policies(policies)
@@ -285,12 +299,43 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
         exit_with_exception(e)
 
 
+@click.command("cleanup-groups", help="Cleans up groups file for import")
+@click.pass_context
+@_output_file_option
+@_input_file_option
+def cleanup_groups_cmd(ctx: click.Context, input_file: str, output_file: str):
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Cleaning up groups for import...", fg="yellow")
+
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
+        output_file = get_from_ctx_if_none(
+            ctx, "output_file", output_file, lambda: click.prompt("The output file")
+        )
+        click.echo(f"Input file: {input_file}; Output file: {output_file}")
+
+        groups = load_groups(input_file)
+        groups = cleanup_groups(groups)
+        save_groups(groups=groups, output_file=output_file)
+
+        # store the output file in the context for chaining commands
+        ctx.obj["output_file"] = output_file
+    except Exception as e:
+        exit_with_exception(e)
+
+
 @click.command("import-policies", help="Imports CA policies from a file")
 @click.pass_context
 @_access_token_option
 @_input_file_option
+@_allow_duplicates_option
 def import_policies_cmd(
-    ctx: click.Context, input_file: str, access_token: str | None = None
+    ctx: click.Context,
+    input_file: str,
+    access_token: str | None = None,
+    allow_duplicates: bool = False,
 ):
     try:
         ctx.ensure_object(dict)
@@ -299,13 +344,96 @@ def import_policies_cmd(
             ctx, "access_token", access_token, get_access_token_cmd
         )
         input_file = get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file", type=click.Path(exists=True))
+            ctx,
+            "output_file",
+            input_file,
+            lambda: click.prompt("The input file", type=click.Path(exists=True)),
         )
+        click.echo(f"Input file: {input_file}")
 
         policies = load_policies(input_file)
-        created_policies = import_policies(access_token, policies)
+        created_policies = import_policies(access_token, policies, allow_duplicates)
         click.echo("Successfully created policies:")
         for policy in created_policies:
             click.echo(f"{policy[0]}: {policy[1]}")
+    except Exception as e:
+        exit_with_exception(e)
+
+
+@click.command(
+    "export-groups", help="Exports groups found in a CA policies file to a file"
+)
+@click.pass_context
+@_access_token_option
+@_input_file_option
+@_output_file_option
+@_ignore_not_found_option
+def export_groups_cmd(
+    ctx: click.Context,
+    input_file: str,
+    output_file: str,
+    access_token: str | None = None,
+    ignore_not_found: bool = False,
+):
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Exporting groups found in CA policies...", fg="yellow")
+        access_token = get_from_ctx_if_none(
+            ctx, "access_token", access_token, get_access_token_cmd
+        )
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
+        output_file = get_from_ctx_if_none(
+            ctx, "output_file", output_file, lambda: click.prompt("The output file")
+        )
+        click.echo(f"Input file: {input_file}; Output file: {output_file}")
+        policies = load_policies(input_file)
+        groups = get_groups_in_policies(access_token, policies, ignore_not_found)
+        save_groups(groups=groups, output_file=output_file)
+
+        # store the output file in the context for chaining commands
+        ctx.obj["output_file"] = output_file
+    except Exception as e:
+        exit_with_exception(e)
+
+
+@click.command(
+    "import-groups",
+    help="Imports groups from a file."
+    + "This commands needs the following scopes: "
+    + "Group.ReadWrite.All, Directory.ReadWrite.All ",
+)
+@click.pass_context
+@_access_token_option
+@_input_file_option
+@_allow_duplicates_option
+def import_groups_cmd(
+    ctx: click.Context,
+    input_file: str,
+    access_token: str | None = None,
+    allow_duplicates: bool = False,
+):
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Importing groups...", fg="yellow")
+
+        # this command needs the following scopes:
+        # Group.ReadWrite.All, Directory.ReadWrite.All
+        # so let's make sure they are present if the access token is not specified
+        access_token = get_from_ctx_if_none(
+            ctx, "access_token", access_token,
+            get_access_token_cmd,
+            scope=["Group.ReadWrite.All", "Directory.ReadWrite.All"]
+        )
+        input_file = get_from_ctx_if_none(
+            ctx, "output_file", input_file, lambda: click.prompt("The input file")
+        )
+        click.echo(f"Input file: {input_file}")
+        groups = load_groups(input_file)
+        created_groups = import_groups(access_token, groups, allow_duplicates)
+        click.echo("Successfully created groups:")
+        for group in created_groups:
+            click.echo(f"{group[0]}: {group[1]}")
     except Exception as e:
         exit_with_exception(e)
