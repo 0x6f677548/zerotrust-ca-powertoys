@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 
 def _replace_with_default_if_none(
     value: str | list[str] | None, default: str | list[str]
-) -> str:
+) -> str | list[str]:
     if value is None:
         return default
     return value
