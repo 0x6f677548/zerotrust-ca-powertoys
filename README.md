@@ -11,7 +11,7 @@ CA-PowerToys can be used to:
 - **Clean up groups for import**, removing keys that are not allowed in the import process
 
 # Why ?
-There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a format that can be human readable and editable, and then import them back to another tenant. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace keys by values, and import Conditional Access policies and groups.  
+There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace keys by values, and import Conditional Access policies and groups.  
 
 Here are a couple of examples of how CA-PowerToys can help you:
 - Export Conditional Access policies from one tenant and import them into another tenant using Graph PowerShell
