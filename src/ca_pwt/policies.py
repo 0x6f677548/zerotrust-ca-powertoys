@@ -1,7 +1,7 @@
 import logging
 from .helpers.dict import remove_element_from_dict, cleanup_odata_dict
 from .helpers.graph_api import EntityAPI
-from .policies_mappings import values_to_keys
+from .policies_mappings import replace_values_by_keys_in_policies
 from .groups import get_groups_by_ids
 
 _logger = logging.getLogger(__name__)
@@ -13,6 +13,8 @@ class PoliciesAPI(EntityAPI):
 
 
 def load_policies(input_file: str) -> dict:
+    """Loads policies from the specified file.
+    It also cleans up the dictionary to remove unnecessary elements."""
     import json
 
     with open(input_file, "r") as f:
@@ -24,6 +26,7 @@ def load_policies(input_file: str) -> dict:
 
 
 def save_policies(policies: dict, output_file: str):
+    """Saves policies to the specified file."""
     import json
 
     with open(output_file, "w") as f:
@@ -32,6 +35,9 @@ def save_policies(policies: dict, output_file: str):
 
 
 def cleanup_policies(source: dict) -> dict:
+    """Cleans up the policies dictionary for import by
+    removing disallowed elements while importing. (e.g. id, createdDateTime,
+    modifiedDateTime, templateId, id"""
     _logger.info("Cleaning up policies...")
 
     # exclude some elements, namely createdDateTime,
@@ -50,6 +56,8 @@ def cleanup_policies(source: dict) -> dict:
 
 
 def export_policies(access_token: str, filter: str | None = None) -> dict:
+    """Exports all policies with the specified filter. Filter is
+    an OData filter string."""
     policies_api = PoliciesAPI(access_token=access_token)
     response = policies_api.get_all(odata_filter=filter)
     response.assert_success()
@@ -65,12 +73,19 @@ def import_policies(
     access_token: str,
     policies: dict,
     allow_duplicates: bool = False,
-) -> list[(str, str)]:
+) -> list[tuple[str, str]]:
+    """Imports the specified policies. If allow_duplicates is False,
+    it will skip policies that already exist (using the display name as
+    the key). Returns a list of tuples with the display name and id of the
+    imported policies.
+    It also cleans up the dictionary to remove unnecessary elements that
+    are not allowed when importing."""
+
     policies_api = PoliciesAPI(access_token=access_token)
-    policies = values_to_keys(access_token, policies)
+    policies = replace_values_by_keys_in_policies(access_token, policies)
     # make sure the policies are cleaned up
     policies = cleanup_policies(policies)
-    created_policies = []
+    created_policies: list[tuple[str, str]] = []
     for policy in policies:
         displayName = policy.get("displayName")
 
@@ -103,7 +118,7 @@ def get_groups_in_policies(
     If ignore_not_found is True, groups that are not found are ignored.
     Returns a dictionary with the groups."""
     # make sure that all groups are in the key format
-    policies = values_to_keys(
+    policies = replace_values_by_keys_in_policies(
         access_token,
         policies,
         lookup_groups=True,

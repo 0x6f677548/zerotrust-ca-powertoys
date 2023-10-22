@@ -1,7 +1,7 @@
 import click
 import logging
 from .authentication import acquire_token
-from .helpers.click import get_from_ctx_if_none, exit_with_exception
+from typing import Callable, Any
 from .policies import (
     load_policies,
     save_policies,
@@ -17,7 +17,7 @@ from .groups import (
     import_groups,
 )
 
-from .policies_mappings import keys_to_values, values_to_keys
+from .policies_mappings import replace_keys_by_values_in_policies, replace_values_by_keys_in_policies
 
 _logger = logging.getLogger(__name__)
 
@@ -60,6 +60,38 @@ _allow_duplicates_option = click.option(
     help="Indicates if duplicates should be allowed and imported. "
     + "Duplicates are checked by comparing the displayName of Policies/Groups",
 )
+
+
+def _exit_with_exception(exception: Exception, exit_code: int = 1, fg: str = "red"):
+    """Exit the program with an exception and exit code"""
+    try:
+        _logger.exception(exception)
+        click.secho(
+            "An error occurred. See the log for more details. (--log_level ERROR). Exiting... "
+            + f"(Exception Type: {type(exception).__name__}); (Exception: {exception})",
+            fg=fg,
+        )
+    finally:
+        exit(exit_code)
+
+
+def _get_from_ctx_if_none(
+    ctx: click.Context,
+    ctx_key: str,
+    value: str | None = None,
+    invoke_func: Callable[..., str] | None = None,
+    **kwargs: Any,
+) -> str:
+    """Get a value from the context if it is None,
+    otherwise invoke a function to get the value."""
+    ctx.ensure_object(dict)
+    if value:
+        return value
+    elif ctx_key in ctx.obj and ctx.obj[ctx_key]:
+        return ctx.obj[ctx_key]
+    else:
+        result = ctx.invoke(invoke_func, **kwargs)
+        return result
 
 
 @click.command(
@@ -128,15 +160,26 @@ def get_access_token_cmd(
     device_code: bool = False,
     output_token: bool = False,
 ) -> str:
-    ctx.ensure_object(dict)
-    access_token = acquire_token(
-        tenant_id, client_id, scope, client_secret, username, password, device_code
-    )
-    # store the access token in the context for chaining commands
-    ctx.obj["access_token"] = access_token
-    if output_token:
-        click.echo(access_token)
-    return access_token
+    """Gets an access token to be used in other commands
+    and stores it in the context for chaining commands"""
+
+    try:
+        # note: this command should not output anything to the console
+        # other than the access token if the output_token flag is set or
+        # any usage that relies on the access token being output will fail
+        ctx.ensure_object(dict)
+
+        access_token = acquire_token(
+            tenant_id, client_id, scope, client_secret, username, password, device_code
+        )
+
+        # store the access token in the context for chaining commands
+        ctx.obj["access_token"] = access_token
+        if output_token:
+            click.echo(access_token)
+        return access_token
+    except Exception as e:
+        _exit_with_exception(e)
 
 
 @click.command(
@@ -154,32 +197,34 @@ def replace_keys_by_values_cmd(
     output_file: str,
     access_token: str | None = None,
 ):
+    """Replaces keys by values in CA policies"""
+
     try:
         ctx.ensure_object(dict)
         click.secho(
             "Replacing keys by values in CA policies...",
             fg="yellow",
         )
-        access_token = get_from_ctx_if_none(
+        access_token = _get_from_ctx_if_none(
             ctx, "access_token", access_token, get_access_token_cmd
         )
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
         )
-        output_file = get_from_ctx_if_none(
+        output_file = _get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
-        policies = keys_to_values(access_token, policies)
+        policies = replace_keys_by_values_in_policies(access_token, policies)
 
         save_policies(policies=policies, output_file=output_file)
 
         # store the output file in the context for chaining commands
         ctx.obj["output_file"] = output_file
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command(
@@ -197,6 +242,8 @@ def replace_values_by_keys_cmd(
     output_file: str,
     access_token: str | None = None,
 ):
+    """Replaces values by keys in CA policies"""
+
     try:
         ctx.ensure_object(dict)
         click.secho(
@@ -204,27 +251,27 @@ def replace_values_by_keys_cmd(
             fg="yellow",
         )
 
-        access_token = get_from_ctx_if_none(
+        access_token = _get_from_ctx_if_none(
             ctx, "access_token", access_token, get_access_token_cmd
         )
 
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
         )
-        output_file = get_from_ctx_if_none(
+        output_file = _get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
-        policies = values_to_keys(access_token, policies)
+        policies = replace_values_by_keys_in_policies(access_token, policies)
 
         save_policies(policies=policies, output_file=output_file)
 
         # store the output file in the context for chaining commands
         ctx.obj["output_file"] = output_file
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command(
@@ -246,15 +293,17 @@ def export_policies_cmd(
     access_token: str | None = None,
     filter: str | None = None,
 ):
+    """Exports CA policies with a filter (e.g. 'startswith(displayName, 'Test')') to a file"""
+
     try:
         ctx.ensure_object(dict)
         click.secho("Exporting ca policies...", fg="yellow")
 
-        access_token = get_from_ctx_if_none(
+        access_token = _get_from_ctx_if_none(
             ctx, "access_token", access_token, get_access_token_cmd
         )
 
-        output_file = get_from_ctx_if_none(
+        output_file = _get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
         click.echo(f"Output file: {output_file}")
@@ -265,7 +314,7 @@ def export_policies_cmd(
         # store the output file in the context for chaining commands
         ctx.obj["output_file"] = output_file
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command(
@@ -277,14 +326,16 @@ def export_policies_cmd(
 @_output_file_option
 @_input_file_option
 def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
+    """Cleans up CA policies file for import (e.g. removes
+    createdDateTime, modifiedDateTime, id, templateId)"""
     try:
         ctx.ensure_object(dict)
         click.secho("Cleaning up CA policies for import...", fg="yellow")
 
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
         )
-        output_file = get_from_ctx_if_none(
+        output_file = _get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
@@ -296,7 +347,7 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
         # store the output file in the context for chaining commands
         ctx.obj["output_file"] = output_file
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command("cleanup-groups", help="Cleans up groups file for import")
@@ -304,14 +355,16 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
 @_output_file_option
 @_input_file_option
 def cleanup_groups_cmd(ctx: click.Context, input_file: str, output_file: str):
+    """Cleans up groups file for import (e.g. removes
+    createdDateTime, modifiedDateTime, id)"""
     try:
         ctx.ensure_object(dict)
         click.secho("Cleaning up groups for import...", fg="yellow")
 
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
         )
-        output_file = get_from_ctx_if_none(
+        output_file = _get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
@@ -323,7 +376,7 @@ def cleanup_groups_cmd(ctx: click.Context, input_file: str, output_file: str):
         # store the output file in the context for chaining commands
         ctx.obj["output_file"] = output_file
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command("import-policies", help="Imports CA policies from a file")
@@ -337,13 +390,14 @@ def import_policies_cmd(
     access_token: str | None = None,
     allow_duplicates: bool = False,
 ):
+    """Imports CA policies from a file"""
     try:
         ctx.ensure_object(dict)
         click.secho("Importing CA policies...", fg="yellow")
-        access_token = get_from_ctx_if_none(
+        access_token = _get_from_ctx_if_none(
             ctx, "access_token", access_token, get_access_token_cmd
         )
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx,
             "output_file",
             input_file,
@@ -357,7 +411,7 @@ def import_policies_cmd(
         for policy in created_policies:
             click.echo(f"{policy[0]}: {policy[1]}")
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command(
@@ -375,16 +429,17 @@ def export_groups_cmd(
     access_token: str | None = None,
     ignore_not_found: bool = False,
 ):
+    """Exports groups found in a CA policies file to a group file"""
     try:
         ctx.ensure_object(dict)
         click.secho("Exporting groups found in CA policies...", fg="yellow")
-        access_token = get_from_ctx_if_none(
+        access_token = _get_from_ctx_if_none(
             ctx, "access_token", access_token, get_access_token_cmd
         )
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
         )
-        output_file = get_from_ctx_if_none(
+        output_file = _get_from_ctx_if_none(
             ctx, "output_file", output_file, lambda: click.prompt("The output file")
         )
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
@@ -395,7 +450,7 @@ def export_groups_cmd(
         # store the output file in the context for chaining commands
         ctx.obj["output_file"] = output_file
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)
 
 
 @click.command(
@@ -414,6 +469,7 @@ def import_groups_cmd(
     access_token: str | None = None,
     allow_duplicates: bool = False,
 ):
+    """Imports groups from a file"""
     try:
         ctx.ensure_object(dict)
         click.secho("Importing groups...", fg="yellow")
@@ -421,12 +477,14 @@ def import_groups_cmd(
         # this command needs the following scopes:
         # Group.ReadWrite.All, Directory.ReadWrite.All
         # so let's make sure they are present if the access token is not specified
-        access_token = get_from_ctx_if_none(
-            ctx, "access_token", access_token,
+        access_token = _get_from_ctx_if_none(
+            ctx,
+            "access_token",
+            access_token,
             get_access_token_cmd,
-            scope=["Group.ReadWrite.All", "Directory.ReadWrite.All"]
+            scope=["Group.ReadWrite.All", "Directory.ReadWrite.All"],
         )
-        input_file = get_from_ctx_if_none(
+        input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
         )
         click.echo(f"Input file: {input_file}")
@@ -436,4 +494,4 @@ def import_groups_cmd(
         for group in created_groups:
             click.echo(f"{group[0]}: {group[1]}")
     except Exception as e:
-        exit_with_exception(e)
+        _exit_with_exception(e)

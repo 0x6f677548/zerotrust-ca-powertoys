@@ -31,6 +31,8 @@ class GroupsAPI(EntityAPI):
 
 
 def load_groups(input_file: str) -> dict:
+    """Loads groups from the specified file.
+    It also cleans up the dictionary to remove unnecessary elements."""
     import json
 
     with open(input_file, "r") as f:
@@ -41,6 +43,7 @@ def load_groups(input_file: str) -> dict:
 
 
 def save_groups(groups: dict, output_file: str):
+    """Saves groups to the specified file."""
     import json
 
     with open(output_file, "w") as f:
@@ -49,6 +52,9 @@ def save_groups(groups: dict, output_file: str):
 
 
 def cleanup_groups(source: dict) -> dict:
+    """Cleans up the groups dictionary for import by
+    removing disallowed elements while importing. (e.g. id, createdDateTime,
+    modifiedDateTime, templateId, deletedDateTime, renewedDateTime)"""
     _logger.info("Cleaning up groups...")
 
     # exclude some elements, namely createdDateTime,
@@ -94,13 +100,13 @@ def get_groups_by_ids(
 
 def import_groups(
     access_token: str, groups: dict, allow_duplicates: bool = False
-) -> list[(str, str)]:
+) -> list[tuple[str, str]]:
     """Imports groups from the specified dictionary.
     Returns a list of tuples with the group id and name of the imported groups.
     """
     _logger.info("Importing groups...")
     groups_api = GroupsAPI(access_token=access_token)
-    result: list[(str, str)] = []
+    result: list[tuple[str, str]] = []
     for group in groups:
         group_name = group["displayName"]
 
