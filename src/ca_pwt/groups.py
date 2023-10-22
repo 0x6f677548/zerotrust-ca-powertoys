@@ -77,7 +77,7 @@ def cleanup_groups(source: dict) -> dict:
 
 def get_groups_by_ids(
     access_token: str, group_ids: list[str], ignore_not_found: bool = True
-) -> dict:
+) -> list[dict]:
     """Exports groups with the specified ids."""
     assert group_ids is not None
     _logger.info("Getting groups by ids...")
