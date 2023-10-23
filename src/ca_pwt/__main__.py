@@ -5,7 +5,7 @@ from .commands import (
     replace_values_by_keys_cmd,
     cleanup_policies_cmd,
     replace_keys_by_values_cmd,
-    get_access_token_cmd,
+    acquire_token_cmd,
     export_groups_cmd,
     import_groups_cmd,
     cleanup_groups_cmd,
@@ -37,7 +37,7 @@ def cli(ctx: click.Context, access_token: str, log_level: str):
     pass
 
 
-cli.add_command(get_access_token_cmd)
+cli.add_command(acquire_token_cmd)
 cli.add_command(import_policies_cmd)
 cli.add_command(export_policies_cmd)
 cli.add_command(replace_values_by_keys_cmd)

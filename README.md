@@ -35,10 +35,10 @@ To get help on a specific command, use the `--help` option with the command name
 
 ### Obtaining an access token 
 
-There are several ways to obtain an access token. The easiest is to use `get-access-token` in chain with other commands and login interactively. In the example below, the token obtained will be injected in the subsequent command to export the policies. 
+There are several ways to obtain an access token. The easiest is to use `acquire-token` in chain with other commands and login interactively. In the example below, the token obtained will be injected in the subsequent command to export the policies. 
 
 ```cmd
-> python -m src.ca_pwt get-access-token export-policies --output_file policies.json
+> python -m src.ca_pwt acquire-token export-policies --output_file policies.json
 ```
 ```
 Exporting conditional access policies...
@@ -49,7 +49,7 @@ Writing policies to file policies.json...
 You can also obtain an access token and store it in a variable to be used in subsequent commands. In this case, you need to instruct the command to output the token using the `--output_token` option. 
    
 ```cmd
-> $token = (python -m src.ca_pwt get-access-token --output_token)
+> $token = (python -m src.ca_pwt acquire-token --output_token)
 > python -m src.ca_pwt --access_token $token export-policies --output_file policies.json
 ```
 ```
@@ -57,9 +57,9 @@ Exporting conditional access policies...
 Obtaining policies from tenant...
 Writing policies to file policies.json...
 ```
-If you are in an endpoint where you can't use the interactive login, you can use `get-access-token` command with `--client_id` and `--client_secret` options, or, alternatively, using device flow, through the `--device_code` option. 
+If you are in an endpoint where you can't use the interactive login, you can use `acquire-token` command with `--client_id` and `--client_secret` options, or, alternatively, using device flow, through the `--device_code` option. 
 ```cmd
-> $token = (python -m src.ca_pwt get-access-token --device_code --output_token)
+> $token = (python -m src.ca_pwt acquire-token --device_code --output_token)
 To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code 123456789 to authenticate.
 ```
 
@@ -133,4 +133,4 @@ Id                                   CreatedDateTime     Description DisplayName
 --                                   ---------------     ----------- -----------
 7b385aec-569a-470a-980b-8624bfa6332c 14/10/2023 07:52:54             CA001-Global-BaseProtection-All…
 ```
-Note: In the above example, a token was previously obtained using the `get-access-token` and stored in the `$token` variable.
+Note: In the above example, a token was previously obtained using the `acquire-token` and stored in the `$token` variable.

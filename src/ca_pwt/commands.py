@@ -95,7 +95,7 @@ def _get_from_ctx_if_none(
 
 
 @click.command(
-    "get-access-token", help="Gets an access token to be used in other commands"
+    "acquire-token", help="Acquires an access token to be used in other commands"
 )
 @click.pass_context
 @click.option(
@@ -149,7 +149,7 @@ def _get_from_ctx_if_none(
     is_flag=True,
     help="Indicates if the access token should be output to the console",
 )
-def get_access_token_cmd(
+def acquire_token_cmd(
     ctx: click.Context,
     tenant_id: str,
     client_id: str,
@@ -160,8 +160,10 @@ def get_access_token_cmd(
     device_code: bool = False,
     output_token: bool = False,
 ) -> str:
-    """Gets an access token to be used in other commands
-    and stores it in the context for chaining commands"""
+    """Acquires an access token to be used in other commands
+    and stores it in the context for chaining commands
+    (e.g. acquire-token | export-policies | import-policies)
+    """
 
     try:
         # note: this command should not output anything to the console
@@ -177,9 +179,9 @@ def get_access_token_cmd(
         ctx.obj["access_token"] = access_token
         if output_token:
             click.echo(access_token)
-        return access_token
     except Exception as e:
         _exit_with_exception(e)
+    return access_token
 
 
 @click.command(
@@ -206,7 +208,7 @@ def replace_keys_by_values_cmd(
             fg="yellow",
         )
         access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, get_access_token_cmd
+            ctx, "access_token", access_token, acquire_token_cmd
         )
         input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
@@ -252,7 +254,7 @@ def replace_values_by_keys_cmd(
         )
 
         access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, get_access_token_cmd
+            ctx, "access_token", access_token, acquire_token_cmd
         )
 
         input_file = _get_from_ctx_if_none(
@@ -300,7 +302,7 @@ def export_policies_cmd(
         click.secho("Exporting ca policies...", fg="yellow")
 
         access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, get_access_token_cmd
+            ctx, "access_token", access_token, acquire_token_cmd
         )
 
         output_file = _get_from_ctx_if_none(
@@ -395,7 +397,7 @@ def import_policies_cmd(
         ctx.ensure_object(dict)
         click.secho("Importing CA policies...", fg="yellow")
         access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, get_access_token_cmd
+            ctx, "access_token", access_token, acquire_token_cmd
         )
         input_file = _get_from_ctx_if_none(
             ctx,
@@ -434,7 +436,7 @@ def export_groups_cmd(
         ctx.ensure_object(dict)
         click.secho("Exporting groups found in CA policies...", fg="yellow")
         access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, get_access_token_cmd
+            ctx, "access_token", access_token, acquire_token_cmd
         )
         input_file = _get_from_ctx_if_none(
             ctx, "output_file", input_file, lambda: click.prompt("The input file")
@@ -481,7 +483,7 @@ def import_groups_cmd(
             ctx,
             "access_token",
             access_token,
-            get_access_token_cmd,
+            acquire_token_cmd,
             scope=["Group.ReadWrite.All", "Directory.ReadWrite.All"],
         )
         input_file = _get_from_ctx_if_none(
