@@ -87,7 +87,7 @@ Writing policies to file policies.json...
 
 ### Exporting all Policies and associated Groups, replace keys with values in the policies file and cleanup for import
     
-```
+```cmd
 > ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-keys-by-values export-groups --output_file groups.json cleanup-groups
 ```
 ```
@@ -109,7 +109,7 @@ You can use CA-PowerToys to export policies in a compatible format with Graph Po
 
 This example chains the `export-policies` and `cleanup-policies` commands to export the policies and clean them up for import. The output is stored in the policies.json file. Then we read the policies from the file and import them using the New-MgIdentityConditionalAccessPolicy command. 
 
-```powershell
+```cmd
 > ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies
 ```
 ```
