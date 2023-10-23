@@ -23,12 +23,12 @@ Here are a couple of examples of how CA-PowerToys can help you:
 # Usage
 CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool. Since it uses Click, it is self-documented and you can use the `--help` option to get help on the commands and options.
 ```cmd
-> python -m src.ca_pwt --help
+> ca-pwt --help
 ```
 
 To get help on a specific command, use the `--help` option with the command name. For example, to get help on the `export-policies` command, use the following command:
 ```cmd
-> python -m src.ca_pwt export-policies --help
+> ca-pwt export-policies --help
 ```
 
 ## Usage Examples
@@ -38,7 +38,7 @@ To get help on a specific command, use the `--help` option with the command name
 There are several ways to obtain an access token. The easiest is to use `acquire-token` in chain with other commands and login interactively. In the example below, the token obtained will be injected in the subsequent command to export the policies. 
 
 ```cmd
-> python -m src.ca_pwt acquire-token export-policies --output_file policies.json
+> ca-pwt acquire-token export-policies --output_file policies.json
 ```
 ```
 Exporting conditional access policies...
@@ -49,8 +49,8 @@ Writing policies to file policies.json...
 You can also obtain an access token and store it in a variable to be used in subsequent commands. In this case, you need to instruct the command to output the token using the `--output_token` option. 
    
 ```cmd
-> $token = (python -m src.ca_pwt acquire-token --output_token)
-> python -m src.ca_pwt --access_token $token export-policies --output_file policies.json
+> $token = (ca-pwt acquire-token --output_token)
+> ca-pwt --access_token $token export-policies --output_file policies.json
 ```
 ```
 Exporting conditional access policies...
@@ -59,14 +59,14 @@ Writing policies to file policies.json...
 ```
 If you are in an endpoint where you can't use the interactive login, you can use `acquire-token` command with `--client_id` and `--client_secret` options, or, alternatively, using device flow, through the `--device_code` option. 
 ```cmd
-> $token = (python -m src.ca_pwt acquire-token --device_code --output_token)
+> $token = (ca-pwt acquire-token --device_code --output_token)
 To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code 123456789 to authenticate.
 ```
 
 ### Exporting policies
     
 ```cmd
-> python -m src.ca_pwt --access_token $token export-policies --output_file policies.json
+> ca-pwt --access_token $token export-policies --output_file policies.json
 ```
 ```
 Exporting conditional access policies...
@@ -77,7 +77,7 @@ Writing policies to file policies.json...
 You can also define oData filters to export only a subset of the policies. In the example below, we export only the policies that have the word "Global" in the DisplayName. 
 
 ```cmd
-> python -m src.ca_pwt --access_token $token export-policies --output_file policies.json --filter "startswith(displayName,'Global')"
+> ca-pwt --access_token $token export-policies --output_file policies.json --filter "startswith(displayName,'Global')"
 ```
 ```
 Exporting conditional access policies...
@@ -88,7 +88,7 @@ Writing policies to file policies.json...
 ### Exporting all Policies and associated Groups, replace keys with values in the policies file and cleanup for import
     
 ```
-> python -m src.ca_pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-keys-by-values export-groups --output_file groups.json cleanup-groups
+> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-keys-by-values export-groups --output_file groups.json cleanup-groups
 ```
 ```
 Exporting ca policies...
@@ -110,7 +110,7 @@ You can use CA-PowerToys to export policies in a compatible format with Graph Po
 This example chains the `export-policies` and `cleanup-policies` commands to export the policies and clean them up for import. The output is stored in the policies.json file. Then we read the policies from the file and import them using the New-MgIdentityConditionalAccessPolicy command. 
 
 ```powershell
-> python -m src.ca_pwt --access_token $token export-policies --output_file policies.json cleanup-policies
+> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies
 ```
 ```
 Exporting conditional access policies...
