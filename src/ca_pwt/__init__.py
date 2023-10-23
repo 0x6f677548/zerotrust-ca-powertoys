@@ -1,3 +1,4 @@
+from .app import entry_point as cli
 # flake8: noqa : F401
 from .authentication import (
     acquire_token,
