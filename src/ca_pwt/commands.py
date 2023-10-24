@@ -1,8 +1,9 @@
 import click
 import logging
-from .authentication import acquire_token
+from sys import exit
+from ca_pwt.authentication import acquire_token
 from typing import Callable, Any
-from .policies import (
+from ca_pwt.policies import (
     load_policies,
     save_policies,
     cleanup_policies,
@@ -10,14 +11,14 @@ from .policies import (
     import_policies,
     get_groups_in_policies,
 )
-from .groups import (
+from ca_pwt.groups import (
     load_groups,
     save_groups,
     cleanup_groups,
     import_groups,
 )
 
-from .policies_mappings import replace_keys_by_values_in_policies, replace_values_by_keys_in_policies
+from ca_pwt.policies_mappings import replace_keys_by_values_in_policies, replace_values_by_keys_in_policies
 
 _logger = logging.getLogger(__name__)
 
@@ -31,9 +32,7 @@ _output_file_option = click.option(
 
 _input_file_option = click.option(
     "--input_file",
-    type=click.Path(
-        exists=False
-    ),  # although it should exists, chaining commands will fail if it does not
+    type=click.Path(exists=False),  # although it should exists, chaining commands will fail if it does not
     prompt="The input file",
     prompt_required=False,
     help="The file to read the policies from",
@@ -58,7 +57,7 @@ _allow_duplicates_option = click.option(
     is_flag=True,
     default=False,
     help="Indicates if duplicates should be allowed and imported. "
-    + "Duplicates are checked by comparing the displayName of Policies/Groups",
+    "Duplicates are checked by comparing the displayName of Policies/Groups",
 )
 
 
@@ -68,7 +67,7 @@ def _exit_with_exception(exception: Exception, exit_code: int = 1, fg: str = "re
         _logger.exception(exception)
         click.secho(
             "An error occurred. See the log for more details. (--log_level ERROR). Exiting... "
-            + f"(Exception Type: {type(exception).__name__}); (Exception: {exception})",
+            f"(Exception Type: {type(exception).__name__}); (Exception: {exception})",
             fg=fg,
         )
     finally:
@@ -94,16 +93,13 @@ def _get_from_ctx_if_none(
         return result
 
 
-@click.command(
-    "acquire-token", help="Acquires an access token to be used in other commands"
-)
+@click.command("acquire-token", help="Acquires an access token to be used in other commands")
 @click.pass_context
 @click.option(
     "--client_id",
     prompt="Your client ID",
     prompt_required=False,
-    help="The client ID of this Azure AD app "
-    + "(leave blank if you want to use Graph Command Line Tools)",
+    help="The client ID of this Azure AD app (leave blank if you want to use Graph Command Line Tools)",
 )
 @click.option(
     "--tenant_id",
@@ -116,7 +112,7 @@ def _get_from_ctx_if_none(
     prompt="Your client secret",
     prompt_required=False,
     help="The client secret of your Azure AD app "
-    + "(leave blank if you want to use delegated permissions with a user account)",
+    "(leave blank if you want to use delegated permissions with a user account)",
 )
 @click.option(
     "--username",
@@ -142,7 +138,7 @@ def _get_from_ctx_if_none(
     prompt_required=False,
     multiple=True,
     help="The scopes to use for authentication (leave blank if you want to use the default scopes)."
-    + "This parameter can be specified multiple times to specify multiple scopes",
+    "This parameter can be specified multiple times to specify multiple scopes",
 )
 @click.option(
     "--output_token",
@@ -157,6 +153,7 @@ def acquire_token_cmd(
     client_secret: str | None = None,
     username: str | None = None,
     password: str | None = None,
+    *,
     device_code: bool = False,
     output_token: bool = False,
 ) -> str:
@@ -172,7 +169,7 @@ def acquire_token_cmd(
         ctx.ensure_object(dict)
 
         access_token = acquire_token(
-            tenant_id, client_id, scope, client_secret, username, password, device_code
+            tenant_id, client_id, scope, client_secret, username, password, device_code=device_code
         )
 
         # store the access token in the context for chaining commands
@@ -187,7 +184,7 @@ def acquire_token_cmd(
 @click.command(
     "replace-keys-by-values",
     help="Replaces keys by values in CA policies"
-    + " (e.g. group ids by group names, user ids by user principal names, etc.)",
+    " (e.g. group ids by group names, user ids by user principal names, etc.)",
 )
 @click.pass_context
 @_access_token_option
@@ -207,15 +204,9 @@ def replace_keys_by_values_cmd(
             "Replacing keys by values in CA policies...",
             fg="yellow",
         )
-        access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, acquire_token_cmd
-        )
-        input_file = _get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file")
-        )
-        output_file = _get_from_ctx_if_none(
-            ctx, "output_file", output_file, lambda: click.prompt("The output file")
-        )
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
@@ -232,7 +223,7 @@ def replace_keys_by_values_cmd(
 @click.command(
     "replace-values-by-keys",
     help="Replaces values by keys in CA policies"
-    + " (e.g. group names by group ids, user principal names by user ids, etc.)",
+    " (e.g. group names by group ids, user principal names by user ids, etc.)",
 )
 @click.pass_context
 @_access_token_option
@@ -253,16 +244,10 @@ def replace_values_by_keys_cmd(
             fg="yellow",
         )
 
-        access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, acquire_token_cmd
-        )
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
 
-        input_file = _get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file")
-        )
-        output_file = _get_from_ctx_if_none(
-            ctx, "output_file", output_file, lambda: click.prompt("The output file")
-        )
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
@@ -278,13 +263,12 @@ def replace_values_by_keys_cmd(
 
 @click.command(
     "export-policies",
-    help="Exports CA policies with a "
-    + "filter (e.g. 'startswith(displayName, 'Test')') to a file",
+    help="Exports CA policies with a filter (e.g. 'startswith(displayName, 'Test')') to a file",
 )
 @click.pass_context
 @_access_token_option
 @click.option(
-    "--filter",
+    "--odata_filter",
     help="ODATA filter to apply to the policies (e.g. 'startswith(displayName, 'Test')')",
     default=None,
 )
@@ -293,7 +277,7 @@ def export_policies_cmd(
     ctx: click.Context,
     output_file: str,
     access_token: str | None = None,
-    filter: str | None = None,
+    odata_filter: str | None = None,
 ):
     """Exports CA policies with a filter (e.g. 'startswith(displayName, 'Test')') to a file"""
 
@@ -301,16 +285,12 @@ def export_policies_cmd(
         ctx.ensure_object(dict)
         click.secho("Exporting ca policies...", fg="yellow")
 
-        access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, acquire_token_cmd
-        )
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
 
-        output_file = _get_from_ctx_if_none(
-            ctx, "output_file", output_file, lambda: click.prompt("The output file")
-        )
+        output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
         click.echo(f"Output file: {output_file}")
 
-        policies = export_policies(access_token, filter)
+        policies = export_policies(access_token, odata_filter)
         save_policies(policies=policies, output_file=output_file)
 
         # store the output file in the context for chaining commands
@@ -321,8 +301,7 @@ def export_policies_cmd(
 
 @click.command(
     "cleanup-policies",
-    help="Cleans up CA policies file for import (e.g. removes "
-    + "createdDateTime, modifiedDateTime, id, templateId",
+    help="Cleans up CA policies file for import (e.g. removes createdDateTime, modifiedDateTime, id, templateId",
 )
 @click.pass_context
 @_output_file_option
@@ -334,12 +313,8 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
         ctx.ensure_object(dict)
         click.secho("Cleaning up CA policies for import...", fg="yellow")
 
-        input_file = _get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file")
-        )
-        output_file = _get_from_ctx_if_none(
-            ctx, "output_file", output_file, lambda: click.prompt("The output file")
-        )
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
@@ -363,12 +338,8 @@ def cleanup_groups_cmd(ctx: click.Context, input_file: str, output_file: str):
         ctx.ensure_object(dict)
         click.secho("Cleaning up groups for import...", fg="yellow")
 
-        input_file = _get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file")
-        )
-        output_file = _get_from_ctx_if_none(
-            ctx, "output_file", output_file, lambda: click.prompt("The output file")
-        )
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         groups = load_groups(input_file)
@@ -390,15 +361,14 @@ def import_policies_cmd(
     ctx: click.Context,
     input_file: str,
     access_token: str | None = None,
+    *,
     allow_duplicates: bool = False,
 ):
     """Imports CA policies from a file"""
     try:
         ctx.ensure_object(dict)
         click.secho("Importing CA policies...", fg="yellow")
-        access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, acquire_token_cmd
-        )
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
         input_file = _get_from_ctx_if_none(
             ctx,
             "output_file",
@@ -408,7 +378,7 @@ def import_policies_cmd(
         click.echo(f"Input file: {input_file}")
 
         policies = load_policies(input_file)
-        created_policies = import_policies(access_token, policies, allow_duplicates)
+        created_policies = import_policies(access_token, policies, allow_duplicates=allow_duplicates)
         click.echo("Successfully created policies:")
         for policy in created_policies:
             click.echo(f"{policy[0]}: {policy[1]}")
@@ -416,9 +386,7 @@ def import_policies_cmd(
         _exit_with_exception(e)
 
 
-@click.command(
-    "export-groups", help="Exports groups found in a CA policies file to a file"
-)
+@click.command("export-groups", help="Exports groups found in a CA policies file to a file")
 @click.pass_context
 @_access_token_option
 @_input_file_option
@@ -429,24 +397,19 @@ def export_groups_cmd(
     input_file: str,
     output_file: str,
     access_token: str | None = None,
+    *,
     ignore_not_found: bool = False,
 ):
     """Exports groups found in a CA policies file to a group file"""
     try:
         ctx.ensure_object(dict)
         click.secho("Exporting groups found in CA policies...", fg="yellow")
-        access_token = _get_from_ctx_if_none(
-            ctx, "access_token", access_token, acquire_token_cmd
-        )
-        input_file = _get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file")
-        )
-        output_file = _get_from_ctx_if_none(
-            ctx, "output_file", output_file, lambda: click.prompt("The output file")
-        )
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
         policies = load_policies(input_file)
-        groups = get_groups_in_policies(access_token, policies, ignore_not_found)
+        groups = get_groups_in_policies(access_token, policies, ignore_not_found=ignore_not_found)
         save_groups(groups=groups, output_file=output_file)
 
         # store the output file in the context for chaining commands
@@ -458,8 +421,8 @@ def export_groups_cmd(
 @click.command(
     "import-groups",
     help="Imports groups from a file."
-    + "This commands needs the following scopes: "
-    + "Group.ReadWrite.All, Directory.ReadWrite.All ",
+    "This commands needs the following scopes: "
+    "Group.ReadWrite.All, Directory.ReadWrite.All ",
 )
 @click.pass_context
 @_access_token_option
@@ -469,6 +432,7 @@ def import_groups_cmd(
     ctx: click.Context,
     input_file: str,
     access_token: str | None = None,
+    *,
     allow_duplicates: bool = False,
 ):
     """Imports groups from a file"""
@@ -486,9 +450,7 @@ def import_groups_cmd(
             acquire_token_cmd,
             scope=["Group.ReadWrite.All", "Directory.ReadWrite.All"],
         )
-        input_file = _get_from_ctx_if_none(
-            ctx, "output_file", input_file, lambda: click.prompt("The input file")
-        )
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         click.echo(f"Input file: {input_file}")
         groups = load_groups(input_file)
         created_groups = import_groups(access_token, groups, allow_duplicates)

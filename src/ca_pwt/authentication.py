@@ -8,9 +8,7 @@ _default_scopes = ["https://graph.microsoft.com/.default"]
 _logger = logging.getLogger(__name__)
 
 
-def _replace_with_default_if_none(
-    value: str | list[str] | None, default: str | list[str]
-) -> str | list[str]:
+def _replace_with_default_if_none(value: str | list[str] | None, default: str | list[str]) -> str | list[str]:
     if value is None:
         return default
     return value
@@ -23,6 +21,7 @@ def acquire_token(
     client_secret: str | None = None,
     username: str | None = None,
     password: str | None = None,
+    *,
     device_code: bool = False,
 ) -> str:
     """Acquire an access token using the specified authentication method
@@ -78,9 +77,7 @@ def acquire_token_interactive(
     tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
     scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
-    app = PublicClientApplication(
-        client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
-    )
+    app = PublicClientApplication(client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}")
     response = app.acquire_token_interactive(scopes=scopes)
 
     if "error" in response:
@@ -126,12 +123,8 @@ def acquire_token_by_username_password(
     client_id = _replace_with_default_if_none(client_id, _default_client_id)
     scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
-    app = PublicClientApplication(
-        client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
-    )
-    response = app.acquire_token_by_username_password(
-        username=username, password=password, scopes=scopes
-    )
+    app = PublicClientApplication(client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}")
+    response = app.acquire_token_by_username_password(username=username, password=password, scopes=scopes)
 
     if "error" in response:
         _logger.error(response["error_description"])
@@ -154,14 +147,10 @@ def acquire_token_by_device_flow(
     tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
     scopes = _replace_with_default_if_none(scopes, _default_scopes)
 
-    app = PublicClientApplication(
-        client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}"
-    )
+    app = PublicClientApplication(client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}")
     flow = app.initiate_device_flow(scopes=scopes)
     if "user_code" not in flow:
-        raise ValueError(
-            "Fail to create device flow. Err: %s" % json.dumps(flow, indent=4)
-        )
+        raise ValueError("Fail to create device flow. Err: %s" % json.dumps(flow, indent=4))
     stdout_callback(flow["message"])
     stdout_flush()
 

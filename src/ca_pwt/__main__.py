@@ -1,4 +1,4 @@
-from .app import entry_point
+from ca_pwt.app import entrypoint
 
 if __name__ == "__main__":
-    entry_point()
+    entrypoint()

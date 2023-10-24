@@ -1,4 +1,5 @@
-from .helpers.graph_api import APIResponse, EntityAPI
+from ca_pwt.helpers.graph_api import APIResponse, EntityAPI
+from ca_pwt.helpers.utils import assert_condition
 
 
 class UsersAPI(EntityAPI):
@@ -10,7 +11,7 @@ class UsersAPI(EntityAPI):
         or the userPrincipalName attribute
         """
 
-        assert entity_id, "entity_id cannot be None"
+        assert_condition(entity_id, "entity_id cannot be None")
 
         # encode the hash symbol in the entity_id
         entity_id = entity_id.replace("#", "%23")

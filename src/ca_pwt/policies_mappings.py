@@ -1,10 +1,10 @@
 import logging
-from .helpers.dict import replace_with_key_value_lookup
-from .groups import GroupsAPI
-from .users import UsersAPI
-from .directory_roles import DirectoryRolesAPI, DirectoryRoleTemplatesAPI
+from ca_pwt.helpers.dict import replace_with_key_value_lookup
+from ca_pwt.groups import GroupsAPI
+from ca_pwt.users import UsersAPI
+from ca_pwt.directory_roles import DirectoryRolesAPI, DirectoryRoleTemplatesAPI
 from typing import Callable
-from .helpers.graph_api import APIResponse
+from ca_pwt.helpers.graph_api import APIResponse
 
 _logger = logging.getLogger(__name__)
 
@@ -107,23 +107,20 @@ _BUILTIN_ROLES_ID_NAME = {
 _BUILTIN_ROLES_NAME_ID = {v: k for k, v in _BUILTIN_ROLES_ID_NAME.items()}
 
 
-def _graph_api_lookup(
-    functions: list[Callable[[str], APIResponse]], key: str, attrib_name: str
-) -> str | None:
+def _graph_api_lookup(functions: list[Callable[[str], APIResponse]], key: str, attrib_name: str) -> str | None:
     for func in functions:
         response = func(key)
         if response.success:
             return response.json()[attrib_name]
         else:
-            _logger.debug(
-                f"Callable {func.__name__}: Entity with key {key} not found. Response: {response}"
-            )
+            _logger.debug(f"Callable {func.__name__}: Entity with key {key} not found. Response: {response}")
     return None
 
 
 def replace_values_by_keys_in_policies(
     access_token: str,
     policies: dict,
+    *,
     lookup_groups: bool = True,
     lookup_users: bool = True,
     lookup_roles: bool = True,
@@ -145,9 +142,7 @@ def replace_values_by_keys_in_policies(
     groups_api = GroupsAPI(access_token=access_token)
     users_api = UsersAPI(access_token=access_token)
     dir_roles_api: DirectoryRolesAPI = DirectoryRolesAPI(access_token)
-    dir_role_templates_api: DirectoryRoleTemplatesAPI = DirectoryRoleTemplatesAPI(
-        access_token
-    )
+    dir_role_templates_api: DirectoryRoleTemplatesAPI = DirectoryRoleTemplatesAPI(access_token)
 
     for policy in policies:
         # let's transform groupIds to groupNames if any
@@ -160,9 +155,7 @@ def replace_values_by_keys_in_policies(
                     ("excludeGroupNames", "excludeGroups"),
                     ("includeGroupNames", "includeGroups"),
                 ],
-                lookup_func=lambda key: _graph_api_lookup(
-                    [groups_api.get_by_display_name], key, "id"
-                ),
+                lookup_func=lambda key: _graph_api_lookup([groups_api.get_by_display_name], key, "id"),
                 lookup_cache=lookup_cache,
             )
         if lookup_users:
@@ -172,9 +165,7 @@ def replace_values_by_keys_in_policies(
                     ("excludeUserNames", "excludeUsers"),
                     ("includeUserNames", "includeUsers"),
                 ],
-                lookup_func=lambda key: _graph_api_lookup(
-                    [users_api.get_by_id], key, "id"
-                ),
+                lookup_func=lambda key: _graph_api_lookup([users_api.get_by_id], key, "id"),
                 lookup_cache=lookup_cache,
             )
         if lookup_roles:
@@ -204,6 +195,7 @@ def replace_values_by_keys_in_policies(
 def replace_keys_by_values_in_policies(
     access_token: str,
     policies: dict,
+    *,
     lookup_groups: bool = True,
     lookup_users: bool = True,
     lookup_roles: bool = True,
@@ -226,9 +218,7 @@ def replace_keys_by_values_in_policies(
     groups_api: GroupsAPI = GroupsAPI(access_token)
     users_api: UsersAPI = UsersAPI(access_token)
     dir_roles_api: DirectoryRolesAPI = DirectoryRolesAPI(access_token)
-    dir_role_templates_api: DirectoryRoleTemplatesAPI = DirectoryRoleTemplatesAPI(
-        access_token
-    )
+    dir_role_templates_api: DirectoryRoleTemplatesAPI = DirectoryRoleTemplatesAPI(access_token)
 
     for policy in policies:
         # let's transform groupIds to groupNames if any
@@ -241,9 +231,7 @@ def replace_keys_by_values_in_policies(
                     ("excludeGroups", "excludeGroupNames"),
                     ("includeGroups", "includeGroupNames"),
                 ],
-                lookup_func=lambda key: _graph_api_lookup(
-                    [groups_api.get_by_id], key, "displayName"
-                ),
+                lookup_func=lambda key: _graph_api_lookup([groups_api.get_by_id], key, "displayName"),
                 lookup_cache=lookup_cache,
             )
         if lookup_users:
@@ -253,9 +241,7 @@ def replace_keys_by_values_in_policies(
                     ("excludeUsers", "excludeUserNames"),
                     ("includeUsers", "includeUserNames"),
                 ],
-                lookup_func=lambda key: _graph_api_lookup(
-                    [users_api.get_by_id], key, "userPrincipalName"
-                ),
+                lookup_func=lambda key: _graph_api_lookup([users_api.get_by_id], key, "userPrincipalName"),
                 lookup_cache=lookup_cache,
             )
         if lookup_roles:

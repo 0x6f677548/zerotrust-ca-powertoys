@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ca-pwt = "ca_pwt:cli"
+ca-pwt = "ca_pwt:entrypoint"
 
 [project.urls]
 Documentation = "https://github.com/0x6f677548/ca-pwt#readme"
@@ -137,6 +137,8 @@ ignore = [
   "S105", "S106", "S107",
   # Ignore complexity
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  # Ignore Import block is un-sorted or un-formatted
+  "I001",
 ]
 unfixable = [
   # Don't touch unused imports

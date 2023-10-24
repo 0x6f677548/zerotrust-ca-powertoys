@@ -1,4 +1,5 @@
-from .helpers.graph_api import EntityAPI, APIResponse
+from ca_pwt.helpers.graph_api import EntityAPI, APIResponse
+from ca_pwt.helpers.utils import assert_condition
 
 
 class DirectoryRolesAPI(EntityAPI):
@@ -13,7 +14,7 @@ class DirectoryRoleTemplatesAPI(EntityAPI):
     def get_by_display_name(self, display_name: str) -> APIResponse:
         """Returns a directory role template by its display name"""
 
-        assert display_name, "display_name cannot be None"
+        assert_condition(display_name, "display_name cannot be None")
 
         # this entity does not support filters neither page size, so we'll have to
         # get all the entities and filter them ourselves

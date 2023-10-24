@@ -1,6 +1,7 @@
-from .app import entry_point as cli
+from ca_pwt.app import entrypoint
+
 # flake8: noqa : F401
-from .authentication import (
+from ca_pwt.authentication import (
     acquire_token,
     acquire_token_by_client_secret,
     acquire_token_by_device_flow,
@@ -8,7 +9,7 @@ from .authentication import (
     acquire_token_interactive,
 )
 
-from .groups import (
+from ca_pwt.groups import (
     load_groups,
     save_groups,
     get_groups_by_ids,
@@ -16,16 +17,13 @@ from .groups import (
     cleanup_groups,
 )
 
-from .policies_mappings import (
-    replace_values_by_keys_in_policies,
-    replace_keys_by_values_in_policies
-)
+from ca_pwt.policies_mappings import replace_values_by_keys_in_policies, replace_keys_by_values_in_policies
 
-from .policies import (
+from ca_pwt.policies import (
     load_policies,
     save_policies,
     import_policies,
     export_policies,
     get_groups_in_policies,
-    cleanup_policies
+    cleanup_policies,
 )

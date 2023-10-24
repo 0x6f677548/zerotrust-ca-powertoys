@@ -28,9 +28,7 @@ def _assert_valid_output_file(output_file):
         # check if file contains the expected data
         # check if value is a single policy or is a list with a policy
 
-        assert "displayName" in data or (
-            isinstance(data, list) and len(data) > 0 and "displayName" in data[0]
-        )
+        assert "displayName" in data or (isinstance(data, list) and len(data) > 0 and "displayName" in data[0])
 
 
 def test_export_policies_no_filter(access_token: str):
@@ -64,7 +62,7 @@ def test_export_policies_filter_by_name(access_token: str):
                 access_token,
                 "--output_file",
                 output_file,
-                "--filter",
+                "--odata_filter",
                 "startswith(displayName, 'CA')",
             ],
         )
@@ -242,15 +240,15 @@ def test_import_policies(access_token: str):
         assert result.exit_code == 0
 
         # check if the policies were imported
-        policiesAPI = PoliciesAPI(access_token)
-        get_policies_response = policiesAPI.get_all("displayName eq 'TEST-POLICY'")
+        policies_api = PoliciesAPI(access_token)
+        get_policies_response = policies_api.get_all("displayName eq 'TEST-POLICY'")
         assert get_policies_response is not None
         policies = get_policies_response.json()["value"]
         assert policies is not None
         assert len(policies) == 1
 
         # clean up
-        policiesAPI.delete(policies[0]["id"])
+        policies_api.delete(policies[0]["id"])
 
 
 def test_import_policies_invalid_data(access_token: str):
@@ -295,7 +293,6 @@ def test_import_policies_invalid_data(access_token: str):
 def test_export_groups(access_token: str):
     runner = CliRunner()
     with runner.isolated_filesystem():
-
         # write the test data to a file
         test_data_file = "test_data.json"
         with open(test_data_file, "w") as f:

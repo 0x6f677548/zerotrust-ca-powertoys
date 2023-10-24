@@ -1,9 +1,12 @@
 import requests
 import logging
-from .helpers.graph_api import APIResponse, EntityAPI
-from .helpers.dict import cleanup_odata_dict, remove_element_from_dict
+from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT
+from ca_pwt.helpers.dict import cleanup_odata_dict, remove_element_from_dict
+from ca_pwt.helpers.utils import assert_condition
 
 _logger = logging.getLogger(__name__)
+
+_HTTP_NOT_FOUND = 404
 
 
 class GroupsAPI(EntityAPI):
@@ -15,18 +18,14 @@ class GroupsAPI(EntityAPI):
         Returns an API_Response object
         To check if the request was successful, use the success property of the API_Response object
         """
-        add_user_url = (
-            f"https://graph.microsoft.com/v1.0/groups/{group_id}/members/$ref"
-        )
+        add_user_url = f"https://graph.microsoft.com/v1.0/groups/{group_id}/members/$ref"
 
         # Define the payload to add user to group
-        payload = {
-            "@odata.id": f"https://graph.microsoft.com/v1.0/directoryObjects/{user_id}"
-        }
+        payload = {"@odata.id": f"https://graph.microsoft.com/v1.0/directoryObjects/{user_id}"}
 
         # Make the request to add user to group
         return APIResponse(
-            requests.post(add_user_url, headers=self.request_headers, json=payload), 204
+            requests.post(add_user_url, headers=self.request_headers, json=payload, timeout=_REQUEST_TIMEOUT), 204
         )
 
 
@@ -35,7 +34,7 @@ def load_groups(input_file: str) -> dict:
     It also cleans up the dictionary to remove unnecessary elements."""
     import json
 
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         _logger.info(f"Reading groups from file {input_file}...")
 
         groups = json.load(f)
@@ -75,11 +74,9 @@ def cleanup_groups(source: dict) -> dict:
     return source
 
 
-def get_groups_by_ids(
-    access_token: str, group_ids: list[str], ignore_not_found: bool = True
-) -> list[dict]:
+def get_groups_by_ids(access_token: str, group_ids: list[str], *, ignore_not_found: bool = True) -> list[dict]:
     """Exports groups with the specified ids."""
-    assert group_ids is not None
+    assert_condition(group_ids, "group_ids cannot be None")
     _logger.info("Getting groups by ids...")
     _logger.debug(f"Ignoring not found groups: {ignore_not_found}")
 
@@ -87,7 +84,7 @@ def get_groups_by_ids(
     groups_api = GroupsAPI(access_token=access_token)
     for group_id in group_ids:
         group_response = groups_api.get_by_id(group_id)
-        if group_response.status_code == 404 and ignore_not_found:
+        if group_response.status_code == _HTTP_NOT_FOUND and ignore_not_found:
             _logger.warning(f"Group with id {group_id} was not found.")
             continue
         else:
@@ -98,9 +95,7 @@ def get_groups_by_ids(
     return result
 
 
-def import_groups(
-    access_token: str, groups: dict, allow_duplicates: bool = False
-) -> list[tuple[str, str]]:
+def import_groups(access_token: str, groups: dict, *, allow_duplicates: bool = False) -> list[tuple[str, str]]:
     """Imports groups from the specified dictionary.
     Returns a list of tuples with the group id and name of the imported groups.
     """
@@ -113,9 +108,7 @@ def import_groups(
         if not allow_duplicates:
             existing_group = groups_api.get_by_display_name(group_name)
             if existing_group.success:
-                _logger.warning(
-                    f"Group with display name {group_name} already exists. Skipping..."
-                )
+                _logger.warning(f"Group with display name {group_name} already exists. Skipping...")
                 continue
 
         group_response = groups_api.create(group)

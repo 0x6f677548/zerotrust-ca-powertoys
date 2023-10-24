@@ -18,25 +18,16 @@ valid_policies: dict = [
                 "includeAuthenticationContextClassReferences": [],
             },
             "users": {
-                "includeRoles": [
-                    "9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3"
-                ],
-                "excludeRoles": [
-                    "ffd52fa5-98dc-465c-991d-fc073eb59f8f"
-                ],
-                "excludeUsers": [
-                    "084f9c81-52d2-4f55-b328-1a8d03697ebe"
-                ],
+                "includeRoles": ["9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3"],
+                "excludeRoles": ["ffd52fa5-98dc-465c-991d-fc073eb59f8f"],
+                "excludeUsers": ["084f9c81-52d2-4f55-b328-1a8d03697ebe"],
                 "includeUsers": [
                     "9ea4c2d7-c87a-4cb9-b04f-75e7cfcff039",
                 ],
                 "includeGroups": [
                     "9ae4a47f-c5e0-4d45-9948-8122a9b4e223",
                 ],
-                "excludeGroups": [
-                    "47eec19a-ec26-4e26-9924-a538d2c33e9d",
-                    "00000000-0000-0000-0000-000000000000"
-                ],
+                "excludeGroups": ["47eec19a-ec26-4e26-9924-a538d2c33e9d", "00000000-0000-0000-0000-000000000000"],
             },
             "platforms": {"includePlatforms": ["all"], "excludePlatforms": []},
         },
@@ -63,8 +54,6 @@ invalid_policies: dict = [
                 "excludeRoles": [],
             }
         },
-        "grantControls": {
-        }
+        "grantControls": {},
     }
 ]
-

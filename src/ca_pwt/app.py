@@ -1,5 +1,5 @@
 import click
-from .commands import (
+from ca_pwt.commands import (
     export_policies_cmd,
     import_policies_cmd,
     replace_values_by_keys_cmd,
@@ -48,9 +48,9 @@ cli.add_command(import_groups_cmd)
 cli.add_command(cleanup_groups_cmd)
 
 
-def entry_point():
+def entrypoint():
     cli(obj={})
 
 
 if __name__ == "__main__":
-    entry_point()
+    entrypoint()

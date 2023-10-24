@@ -1,8 +1,8 @@
 import logging
-from .helpers.dict import remove_element_from_dict, cleanup_odata_dict
-from .helpers.graph_api import EntityAPI
-from .policies_mappings import replace_values_by_keys_in_policies
-from .groups import get_groups_by_ids
+from ca_pwt.helpers.dict import remove_element_from_dict, cleanup_odata_dict
+from ca_pwt.helpers.graph_api import EntityAPI
+from ca_pwt.policies_mappings import replace_values_by_keys_in_policies
+from ca_pwt.groups import get_groups_by_ids
 
 _logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def load_policies(input_file: str) -> dict:
     It also cleans up the dictionary to remove unnecessary elements."""
     import json
 
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         _logger.info(f"Reading policies from file {input_file}...")
 
         policies = json.load(f)
@@ -49,17 +49,15 @@ def cleanup_policies(source: dict) -> dict:
         remove_element_from_dict(policy, "templateId")
         grant_controls = policy["grantControls"]
         if grant_controls is not None:
-            remove_element_from_dict(
-                grant_controls, "authenticationStrength@odata.context"
-            )
+            remove_element_from_dict(grant_controls, "authenticationStrength@odata.context")
     return source
 
 
-def export_policies(access_token: str, filter: str | None = None) -> dict:
+def export_policies(access_token: str, odata_filter: str | None = None) -> dict:
     """Exports all policies with the specified filter. Filter is
     an OData filter string."""
     policies_api = PoliciesAPI(access_token=access_token)
-    response = policies_api.get_all(odata_filter=filter)
+    response = policies_api.get_all(odata_filter=odata_filter)
     response.assert_success()
     policies = response.json()
 
@@ -72,6 +70,7 @@ def export_policies(access_token: str, filter: str | None = None) -> dict:
 def import_policies(
     access_token: str,
     policies: dict,
+    *,
     allow_duplicates: bool = False,
 ) -> list[tuple[str, str]]:
     """Imports the specified policies. If allow_duplicates is False,
@@ -87,31 +86,30 @@ def import_policies(
     policies = cleanup_policies(policies)
     created_policies: list[tuple[str, str]] = []
     for policy in policies:
-        displayName = policy.get("displayName")
+        display_name = policy.get("displayName")
 
         # check if the policy already exists
         if not allow_duplicates:
-            existing_policy = policies_api.get_by_display_name(displayName)
+            existing_policy = policies_api.get_by_display_name(display_name)
             if existing_policy.success:
-                _logger.warning(
-                    f"Policy with display name {displayName} already exists. Skipping..."
-                )
+                _logger.warning(f"Policy with display name {display_name} already exists. Skipping...")
                 continue
 
-        _logger.info(f"Creating policy {displayName}...")
+        _logger.info(f"Creating policy {display_name}...")
         _logger.debug(f"Policy: {policy}")
         response = policies_api.create(policy)
         response.assert_success()
 
-        id = response.json()["id"]
-        created_policies.append((displayName, id))
-        _logger.info("Policy created successfully with id %s", id)
+        policy_id = response.json()["id"]
+        created_policies.append((display_name, policy_id))
+        _logger.info("Policy created successfully with id %s", policy_id)
     return created_policies
 
 
 def get_groups_in_policies(
     access_token: str,
     policies: dict,
+    *,
     ignore_not_found: bool = False,
 ) -> dict:
     """Obtains all groups referenced by the policies in the policies dict.
@@ -141,4 +139,4 @@ def get_groups_in_policies(
                 if group not in groups_found:
                     groups_found.append(group)
     _logger.debug(f"Groups found in policies: {groups_found}")
-    return get_groups_by_ids(access_token, groups_found, ignore_not_found)
+    return get_groups_by_ids(access_token, groups_found, ignore_not_found=ignore_not_found)
