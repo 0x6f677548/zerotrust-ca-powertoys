@@ -8,12 +8,6 @@ _default_scopes = ["https://graph.microsoft.com/.default"]
 _logger = logging.getLogger(__name__)
 
 
-def _replace_with_default_if_none(value: str | list[str] | None, default: str | list[str]) -> str | list[str]:
-    if value is None:
-        return default
-    return value
-
-
 def acquire_token(
     tenant_id: str = _common_tenant_id,
     client_id: str = _default_client_id,
@@ -73,9 +67,12 @@ def acquire_token_interactive(
     scopes: list[str] = _default_scopes,
 ) -> str:
     """Acquire an access token interactively"""
-    client_id = _replace_with_default_if_none(client_id, _default_client_id)
-    tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
-    scopes = _replace_with_default_if_none(scopes, _default_scopes)
+    if not tenant_id:
+        tenant_id = _common_tenant_id
+    if not scopes:
+        scopes = _default_scopes
+    if not client_id:
+        client_id = _default_client_id
 
     app = PublicClientApplication(client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}")
     response = app.acquire_token_interactive(scopes=scopes)
@@ -94,8 +91,11 @@ def acquire_token_by_client_secret(
     scopes: list[str] = _default_scopes,
 ) -> str:
     """Acquire an access token using the client secret"""
-    tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
-    scopes = _replace_with_default_if_none(scopes, _default_scopes)
+
+    if not tenant_id:
+        tenant_id = _common_tenant_id
+    if not scopes:
+        scopes = _default_scopes
 
     app = ConfidentialClientApplication(
         client_id=client_id,
@@ -103,6 +103,8 @@ def acquire_token_by_client_secret(
         authority=f"https://login.microsoftonline.com/{tenant_id}",
     )
 
+    _logger.debug("Acquiring token for client %s", client_id)
+    _logger.debug("Scopes: %s", scopes)
     response = app.acquire_token_for_client(scopes=scopes)
 
     if "error" in response:
@@ -120,8 +122,10 @@ def acquire_token_by_username_password(
     scopes: list[str] = _default_scopes,
 ) -> str:
     """Acquire an access token using the username and password"""
-    client_id = _replace_with_default_if_none(client_id, _default_client_id)
-    scopes = _replace_with_default_if_none(scopes, _default_scopes)
+    if not client_id:
+        client_id = _default_client_id
+    if not scopes:
+        scopes = _default_scopes
 
     app = PublicClientApplication(client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}")
     response = app.acquire_token_by_username_password(username=username, password=password, scopes=scopes)
@@ -143,9 +147,12 @@ def acquire_token_by_device_flow(
     """Acquire an access token using the device flow"""
     import json
 
-    client_id = _replace_with_default_if_none(client_id, _default_client_id)
-    tenant_id = _replace_with_default_if_none(tenant_id, _common_tenant_id)
-    scopes = _replace_with_default_if_none(scopes, _default_scopes)
+    if not client_id:
+        client_id = _default_client_id
+    if not tenant_id:
+        tenant_id = _common_tenant_id
+    if not scopes:
+        scopes = _default_scopes
 
     app = PublicClientApplication(client_id=client_id, authority=f"https://login.microsoftonline.com/{tenant_id}")
     flow = app.initiate_device_flow(scopes=scopes)
