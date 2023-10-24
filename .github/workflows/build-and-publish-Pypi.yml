@@ -32,7 +32,6 @@ jobs:
   build_and_publish:
     name: Build artifacts and publish to pyPi
     runs-on: ubuntu-latest
-    environment: release
     permissions:
       id-token: write
       contents: write
@@ -86,5 +85,5 @@ jobs:
 
     - name: Publish to PyPi
       uses: pypa/gh-action-pypi-publish@v1.8.10
-      with:
-        repository-url: https://test.pypi.org/legacy/
+      # with:
+        # repository-url: https://test.pypi.org/legacy/

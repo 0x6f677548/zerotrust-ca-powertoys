@@ -38,7 +38,6 @@ jobs:
   build_and_publish:
     name: Build artifacts and publish to ghrc
     runs-on: ubuntu-latest
-    environment: release
     permissions:
       contents: write
       packages: write
