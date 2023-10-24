@@ -19,6 +19,26 @@ Here are a couple of examples of how CA-PowerToys can help you:
 
 
 # Installation
+CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool.
+To install it, you can use pip:
+```cmd
+> pip install ca-pwt
+> ca-pwt --help
+```
+
+You can also install it from the source code:
+```cmd
+> git clone 
+> cd ca-powertoys
+> pip install .
+> ca-pwt --help
+```
+
+Alternatively, you can use the Docker image:
+```cmd
+> docker pull ADD_DOCKER_IMAGE_NAME
+> docker run -it --rm ca-pwt --help
+```
 
 # Usage
 CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool. Since it uses Click, it is self-documented and you can use the `--help` option to get help on the commands and options.
