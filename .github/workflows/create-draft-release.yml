@@ -1,0 +1,71 @@
+---
+name: Create->Draft Release
+# yamllint disable rule:line-length
+
+on:
+  workflow_dispatch:
+
+# set the run-name 
+run-name: ${{ github.ref_name }} -> Create->Draft Release (
+  ${{ github.run_attempt }}
+  )
+    
+
+jobs:
+    
+  create_draft_release:
+    name: Creates a draft release with version number as title
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+
+    - name: Get current date and time
+      id: datetime
+      run: |
+        datetime=$(date +'%Y-%m-%dT%H-%M-%SZ')
+        echo "datetime=$datetime" >> $GITHUB_OUTPUT
+
+    - name: Display Run Name
+      run: echo ${{ steps.datetime.outputs.datetime }}
+
+    - name: Checkout
+      uses: actions/checkout@v4.1.0
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4.7.0
+      with:
+        python-version: 3.11
+    
+    - name: Update pip and install hatch
+      run: |
+        python -m pip install --upgrade pip
+        pip install hatch
+
+    - name: Get version
+      id: get_version
+      run: |
+        export version=$(hatch version)
+        echo "version=$version" >> $GITHUB_OUTPUT
+      
+    #validates that the version is a valid semver
+    - name: Validate version
+      id: validate_version
+      run: |
+        if [[ ! ${{ steps.get_version.outputs.version }} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Invalid version: ${{ steps.get_version.outputs.version }}"
+          exit 1
+        fi
+
+    
+    - name: Create release branch
+      run: |
+        git checkout -b "release/${{ steps.get_version.outputs.version }}"
+        git push origin "release/${{ steps.get_version.outputs.version }}"
+
+    - name: Create DRAFT release through github cli and upload assets
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |        
+        gh release create ${{ steps.get_version.outputs.version }} --title ${{ steps.get_version.outputs.version }} --generate-notes --draft
