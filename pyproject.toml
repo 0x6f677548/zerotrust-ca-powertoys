@@ -56,7 +56,7 @@ dependencies = [
   "pytest",
 ]
 [tool.hatch.envs.default.scripts]
-test = "pytest --access_token $(ca-pwt acquire-token --output_token) {args:tests}"
+test = "pytest --access_token $(ca-pwt acquire-token --output_token {args:tests})"
 test-cov = "coverage run -m pytest --access_token $(ca-pwt acquire-token --output_token) {args:tests}"
 cov-report = [
   "- coverage combine",
