@@ -47,11 +47,8 @@ Source = "https://github.com/0x6f677548/ca-pwt"
 [tool.hatch.version]
 path = "src/ca_pwt/__about__.py"
 
-[tool.hatch.build.targets.wheel]
-only-include = ["src/ca_pwt"]
-
 [tool.hatch.build.targets.sdist]
-only-include = ["src/ca_pwt", "README.md", "LICENSE", "pyproject.toml"]
+exclude = ["tests"]
 
 [tool.hatch.envs.default]
 dependencies = [
