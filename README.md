@@ -1,23 +1,13 @@
 # Conditional Access PowerToys (CA-PowerToys)
 
-CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export, import, and clean up Conditional Access policies. It can also be used to export groups that are used in Conditional Access policies and import them into another tenant.
-
 [![PyPI - Version](https://img.shields.io/pypi/v/ca-pwt.svg)](https://pypi.org/project/ca-pwt)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ca-pwt.svg)](https://pypi.org/project/ca-pwt)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/ca-pwt.svg)](https://pypi.org/project/ca-pwt)
 [![PyPI - License](https://img.shields.io/pypi/l/ca-pwt.svg)](https://pypi.org/project/ca-pwt)
 [![GitHub - Last Commit](https://img.shields.io/github/last-commit/0x6f677548/ca-powertoys.svg)]()
 [![GitHub - Lint](https://github.com/0x6f677548/ca-powertoys/actions/workflows/lint.yml/badge.svg)](https://github.com/0x6f677548/ca-powertoys/actions/workflows/lint.yml)
------
-## Table of Contents
 
-- [Why ?](#why-)
-- [Capabilities](#capabilities)
-- [Installation](#installation)
-    * [pip](#pip)
-    * [From source code](#from-source-code)
-    * [Docker](#docker)
-- [Usage](#usage)
+CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export, import, and clean up Conditional Access policies. It can also be used to export groups that are used in Conditional Access policies and import them into another tenant.
 
 # Why ?
 There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace keys by values, and import Conditional Access policies and groups.  
