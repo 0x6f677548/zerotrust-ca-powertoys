@@ -453,7 +453,7 @@ def import_groups_cmd(
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         click.echo(f"Input file: {input_file}")
         groups = load_groups(input_file)
-        created_groups = import_groups(access_token, groups, allow_duplicates)
+        created_groups = import_groups(access_token, groups, allow_duplicates=allow_duplicates)
         click.echo("Successfully created groups:")
         for group in created_groups:
             click.echo(f"{group[0]}: {group[1]}")

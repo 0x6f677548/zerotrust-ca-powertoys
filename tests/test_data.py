@@ -1,5 +1,5 @@
 # flake8: noqa: E501
-valid_policies: dict = [
+valid_policies: list[dict] = [
     {
         "id": "88ef8435-6ab4-42c5-8e8d-e5dc2d1d66a9",
         "displayName": "TEST-POLICY",
@@ -41,7 +41,7 @@ valid_policies: dict = [
     }
 ]
 
-invalid_policies: dict = [
+invalid_policies: list[dict] = [
     {
         "displayNames": "ca-test",
         "conditions": {

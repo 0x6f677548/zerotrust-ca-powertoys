@@ -19,7 +19,7 @@ class APIResponse:
         the success property will be set to True
         """
         self.status_code = request_response.status_code
-        self.response = request_response
+        self.response: requests.Response | str = request_response
         self.expected_status_code = expected_status_code
         self.success = self.status_code == self.expected_status_code
         if self._logger.isEnabledFor(logging.DEBUG):

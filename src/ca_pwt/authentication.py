@@ -1,4 +1,5 @@
 import logging
+from typing import Callable
 from msal import PublicClientApplication, ConfidentialClientApplication
 
 _common_tenant_id = "common"
@@ -138,8 +139,8 @@ def acquire_token_by_username_password(
 
 
 def acquire_token_by_device_flow(
-    stdout_callback: callable,
-    stdout_flush: callable,
+    stdout_callback: Callable,
+    stdout_flush: Callable,
     client_id: str = _default_client_id,
     tenant_id: str = _common_tenant_id,
     scopes: list[str] = _default_scopes,

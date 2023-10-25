@@ -33,7 +33,8 @@ classifiers = [
 dependencies = [
   "requests>=2.31.0",
   "msal>=1.24.1",
-  "click>=8.1.7"
+  "click>=8.1.7",
+  "types-requests>=2.31.0",
 ]
 
 [project.scripts]
