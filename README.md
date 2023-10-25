@@ -47,7 +47,7 @@ You can also install it from the source code:
 ## Docker
 Alternatively, you can use the Docker image:
 ```console
-> docker pull ghcr.io/0x6f677548/ca-pwt:latest
+> docker pull ghcr.io/0x6f677548/ca-powertoys:latest
 > docker run -it --rm ca-pwt --help
 ```
 

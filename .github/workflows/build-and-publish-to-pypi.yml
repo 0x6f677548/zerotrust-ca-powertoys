@@ -7,7 +7,7 @@ on:
     types: [published]
 
 # set the run-name 
-run-name: ${{ github.ref_name }} -> Release->Build and Publish Pypi (
+run-name: ${{ github.ref_name }} -> Release->Build and Publish to Pypi (
   ${{ github.run_attempt }}
   )
   
