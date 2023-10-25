@@ -1,8 +1,45 @@
+import os
+import json
+
+SLEEP_BETWEEN_TESTS = 5
+
+
+def assert_valid_output_file(output_file):
+    # check if file exists
+    assert os.path.isfile(output_file)
+    # check if file is not empty
+    assert os.stat(output_file).st_size != 0
+
+    # open file and check if it is valid json
+
+    with open(output_file) as f:
+        data = json.load(f)
+        assert data
+
+        # check if file contains the expected data
+        # check if value is a single policy or is a list with a policy
+
+        assert "displayName" in data or (isinstance(data, list) and len(data) > 0 and "displayName" in data[0])
+
+
+VALID_GROUPS: list[dict] = [
+    {
+        "id": "88ef8435-6ab4-42c5-8e8d-e5dc2d1d66a1",
+        "createdDateTime": "2023-08-17T23:13:20.9225868Z",
+        "modifiedDateTime": "2023-10-10T13:35:17.0858965Z",
+        "description": "UNIT-TEST-GROUP-PLEASE-IGNORE",
+        "displayName": "UNIT-TEST-GROUP-PLEASE-IGNORE",
+        "mailEnabled": False,
+        "mailNickname": "UNIT-TEST-GROUP-PLEASE-IGNORE",
+        "securityEnabled": True,
+    }
+]
+
 # flake8: noqa: E501
-valid_policies: list[dict] = [
+VALID_POLICIES: list[dict] = [
     {
         "id": "88ef8435-6ab4-42c5-8e8d-e5dc2d1d66a9",
-        "displayName": "TEST-POLICY",
+        "displayName": "UNIT-TEST-CA-POLICY-PLEASE-IGNORE",
         "createdDateTime": "2023-08-17T23:13:20.9225868Z",
         "modifiedDateTime": "2023-10-10T13:35:17.0858965Z",
         "state": "disabled",
@@ -41,7 +78,7 @@ valid_policies: list[dict] = [
     }
 ]
 
-invalid_policies: list[dict] = [
+INVALID_POLICIES: list[dict] = [
     {
         "displayNames": "ca-test",
         "conditions": {
@@ -55,5 +92,15 @@ invalid_policies: list[dict] = [
             }
         },
         "grantControls": {},
+    }
+]
+
+INVALID_GROUPS: list[dict] = [
+    {
+        "description": "",
+        "displayName": "",
+        "mailEnabled": False,
+        "mailNickname": "",
+        "securityEnabled": True,
     }
 ]
