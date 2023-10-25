@@ -28,6 +28,4 @@ from ca_pwt.policies import (
     cleanup_policies,
 )
 
-from ca_pwt.helpers.graph_api import (
-    DuplicateActionEnum
-)
+from ca_pwt.helpers.graph_api import DuplicateActionEnum
