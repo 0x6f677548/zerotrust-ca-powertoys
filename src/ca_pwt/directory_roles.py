@@ -23,8 +23,8 @@ class DirectoryRoleTemplatesAPI(EntityAPI):
 
         if response.success:
             # move the value property to the response property
-            response.response = response.json()["value"]
-            for entity in response.response:
+            results = response.json()["value"]
+            for entity in results:
                 if entity["displayName"] == display_name:
                     response.response = entity
                     return response

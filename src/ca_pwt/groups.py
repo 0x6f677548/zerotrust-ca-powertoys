@@ -1,8 +1,7 @@
 import requests
 import logging
 from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT
-from ca_pwt.helpers.dict import cleanup_odata_dict, remove_element_from_dict
-from ca_pwt.helpers.utils import assert_condition
+from ca_pwt.helpers.utils import assert_condition, cleanup_odata_dict, remove_element_from_dict, ensure_list
 
 _logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class GroupsAPI(EntityAPI):
         )
 
 
-def load_groups(input_file: str) -> dict:
+def load_groups(input_file: str) -> list[dict]:
     """Loads groups from the specified file.
     It also cleans up the dictionary to remove unnecessary elements."""
     import json
@@ -38,10 +37,11 @@ def load_groups(input_file: str) -> dict:
         _logger.info(f"Reading groups from file {input_file}...")
 
         groups = json.load(f)
-        return cleanup_odata_dict(groups, ensure_list=True)
+        groups = cleanup_odata_dict(groups)
+        return ensure_list(groups)
 
 
-def save_groups(groups: dict, output_file: str):
+def save_groups(groups: list[dict], output_file: str):
     """Saves groups to the specified file."""
     import json
 
@@ -50,8 +50,8 @@ def save_groups(groups: dict, output_file: str):
         f.write(json.dumps(groups, indent=4))
 
 
-def cleanup_groups(source: dict) -> dict:
-    """Cleans up the groups dictionary for import by
+def cleanup_groups(source: list[dict]) -> list[dict]:
+    """Cleans up the groups list and dictionary for import by
     removing disallowed elements while importing. (e.g. id, createdDateTime,
     modifiedDateTime, templateId, deletedDateTime, renewedDateTime)"""
     _logger.info("Cleaning up groups...")
@@ -89,13 +89,12 @@ def get_groups_by_ids(access_token: str, group_ids: list[str], *, ignore_not_fou
             continue
         else:
             group_response.assert_success()
-        group_detail = group_response.json()
-        group_detail = cleanup_odata_dict(group_detail, ensure_list=False)
+        group_detail = cleanup_odata_dict(group_response.json())
         result.append(group_detail)
     return result
 
 
-def import_groups(access_token: str, groups: dict, *, allow_duplicates: bool = False) -> list[tuple[str, str]]:
+def import_groups(access_token: str, groups: list[dict], *, allow_duplicates: bool = False) -> list[tuple[str, str]]:
     """Imports groups from the specified dictionary.
     Returns a list of tuples with the group id and name of the imported groups.
     """

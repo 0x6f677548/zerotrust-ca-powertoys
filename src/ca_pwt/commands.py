@@ -77,8 +77,8 @@ def _exit_with_exception(exception: Exception, exit_code: int = 1, fg: str = "re
 def _get_from_ctx_if_none(
     ctx: click.Context,
     ctx_key: str,
-    value: str | None = None,
-    invoke_func: Callable[..., str] | None = None,
+    value: str | None,
+    invoke_func: Callable[..., str],
     **kwargs: Any,
 ) -> str:
     """Get a value from the context if it is None,

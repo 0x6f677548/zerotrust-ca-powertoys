@@ -1,5 +1,5 @@
 import logging
-from ca_pwt.helpers.dict import remove_element_from_dict, cleanup_odata_dict
+from ca_pwt.helpers.utils import remove_element_from_dict, cleanup_odata_dict, ensure_list
 from ca_pwt.helpers.graph_api import EntityAPI
 from ca_pwt.policies_mappings import replace_values_by_keys_in_policies
 from ca_pwt.groups import get_groups_by_ids
@@ -12,7 +12,7 @@ class PoliciesAPI(EntityAPI):
         return "identity/conditionalAccess/policies"
 
 
-def load_policies(input_file: str) -> dict:
+def load_policies(input_file: str) -> list[dict]:
     """Loads policies from the specified file.
     It also cleans up the dictionary to remove unnecessary elements."""
     import json
@@ -20,12 +20,11 @@ def load_policies(input_file: str) -> dict:
     with open(input_file) as f:
         _logger.info(f"Reading policies from file {input_file}...")
 
-        policies = json.load(f)
-        policies = cleanup_odata_dict(policies, ensure_list=True)
-        return policies
+        policies = cleanup_odata_dict(json.load(f))
+        return ensure_list(policies)
 
 
-def save_policies(policies: dict, output_file: str):
+def save_policies(policies: list[dict], output_file: str):
     """Saves policies to the specified file."""
     import json
 
@@ -34,7 +33,7 @@ def save_policies(policies: dict, output_file: str):
         f.write(json.dumps(policies, indent=4))
 
 
-def cleanup_policies(source: dict) -> dict:
+def cleanup_policies(policies: list[dict]) -> list[dict]:
     """Cleans up the policies dictionary for import by
     removing disallowed elements while importing. (e.g. id, createdDateTime,
     modifiedDateTime, templateId, id"""
@@ -42,7 +41,7 @@ def cleanup_policies(source: dict) -> dict:
 
     # exclude some elements, namely createdDateTime,
     # modifiedDateTime, id, templateId, authenticationStrength@odata.context
-    for policy in source:
+    for policy in policies:
         remove_element_from_dict(policy, "createdDateTime")
         remove_element_from_dict(policy, "modifiedDateTime")
         remove_element_from_dict(policy, "id")
@@ -50,10 +49,10 @@ def cleanup_policies(source: dict) -> dict:
         grant_controls = policy["grantControls"]
         if grant_controls is not None:
             remove_element_from_dict(grant_controls, "authenticationStrength@odata.context")
-    return source
+    return policies
 
 
-def export_policies(access_token: str, odata_filter: str | None = None) -> dict:
+def export_policies(access_token: str, odata_filter: str | None = None) -> list[dict]:
     """Exports all policies with the specified filter. Filter is
     an OData filter string."""
     policies_api = PoliciesAPI(access_token=access_token)
@@ -62,14 +61,15 @@ def export_policies(access_token: str, odata_filter: str | None = None) -> dict:
     policies = response.json()
 
     _logger.debug(f"Obtained policies: {policies}")
-    policies = cleanup_odata_dict(policies, ensure_list=True)
+    policies = cleanup_odata_dict(policies)
+    policies = ensure_list(policies)
     _logger.debug(f"Formatted policies: {policies}")
     return policies
 
 
 def import_policies(
     access_token: str,
-    policies: dict,
+    policies: list[dict],
     *,
     allow_duplicates: bool = False,
 ) -> list[tuple[str, str]]:
@@ -86,7 +86,7 @@ def import_policies(
     policies = cleanup_policies(policies)
     created_policies: list[tuple[str, str]] = []
     for policy in policies:
-        display_name = policy.get("displayName")
+        display_name: str = str(policy.get("displayName"))
 
         # check if the policy already exists
         if not allow_duplicates:
@@ -108,10 +108,10 @@ def import_policies(
 
 def get_groups_in_policies(
     access_token: str,
-    policies: dict,
+    policies: list[dict],
     *,
     ignore_not_found: bool = False,
-) -> dict:
+) -> list[dict]:
     """Obtains all groups referenced by the policies in the policies dict.
     If ignore_not_found is True, groups that are not found are ignored.
     Returns a dictionary with the groups."""

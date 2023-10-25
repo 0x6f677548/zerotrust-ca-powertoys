@@ -1,5 +1,4 @@
 import logging
-from ca_pwt.helpers.dict import replace_with_key_value_lookup
 from ca_pwt.groups import GroupsAPI
 from ca_pwt.users import UsersAPI
 from ca_pwt.directory_roles import DirectoryRolesAPI, DirectoryRoleTemplatesAPI
@@ -117,14 +116,72 @@ def _graph_api_lookup(functions: list[Callable[[str], APIResponse]], key: str, a
     return None
 
 
+def _replace_with_key_value_lookup(
+    parent_node: dict,
+    key_value_pairs: list[tuple[str, str]],
+    lookup_func: Callable[[str], str | None],
+    lookup_cache: dict | None = None,
+) -> dict:
+    """
+    Creates a node in parent_node with the name values_node_name with the equivalent values of
+    the node with the name keys_node_name, but looked up with the lookup_func.
+    Usefull for replacing groupIds with groupNames (or vice versa) and similar scenarios.
+    """
+    if lookup_cache is None:
+        lookup_cache = {}
+
+    for keys_node_name, values_node_name in key_value_pairs:
+        _logger.debug(f"Replacing {keys_node_name} with {values_node_name}...")
+        if keys_node_name in parent_node:
+            # create the values node if it doesn't exist
+            if values_node_name not in parent_node:
+                parent_node[values_node_name] = []
+
+            # this will contain the keys that have been mapped
+            mapped_elements = []
+
+            keys = parent_node[keys_node_name]
+            for key in keys:
+                if key in lookup_cache:
+                    value = lookup_cache[key]
+                    _logger.debug(f"Found {key} in cache: {value}")
+                else:
+                    _logger.debug(f"Looking up {key}...")
+                    value = lookup_func(key)
+                    lookup_cache[key] = value
+
+                # we'll only add the value if it's not None
+                if value:
+                    parent_node[values_node_name].append(value)
+                    mapped_elements.append(key)
+
+            # remove all keys that have been mapped
+            for key in mapped_elements:
+                keys.remove(key)
+
+            _logger.debug(f"Keys for {keys_node_name}: {keys}")
+            _logger.debug(f"values for {values_node_name}: {parent_node[values_node_name]}")
+
+            # remove the keys node if it's empty
+            if not keys:
+                _logger.debug(f"Removing {keys_node_name}...")
+                parent_node.pop(keys_node_name)
+
+            # remove the values node if it's empty
+            if not parent_node[values_node_name]:
+                _logger.debug(f"Removing {values_node_name}...")
+                parent_node.pop(values_node_name)
+    return lookup_cache
+
+
 def replace_values_by_keys_in_policies(
     access_token: str,
-    policies: dict,
+    policies: list[dict],
     *,
     lookup_groups: bool = True,
     lookup_users: bool = True,
     lookup_roles: bool = True,
-) -> dict:
+) -> list[dict]:
     """Replaces values by keys in a policies file (e.g. group names by group ids)
     This is useful when you want to import a policies file that was exported from
     a different tenant and groups have different ids.
@@ -149,7 +206,7 @@ def replace_values_by_keys_in_policies(
         conditions = policy["conditions"]
         users = conditions["users"]
         if lookup_groups:
-            lookup_cache = replace_with_key_value_lookup(
+            lookup_cache = _replace_with_key_value_lookup(
                 parent_node=users,
                 key_value_pairs=[
                     ("excludeGroupNames", "excludeGroups"),
@@ -159,7 +216,7 @@ def replace_values_by_keys_in_policies(
                 lookup_cache=lookup_cache,
             )
         if lookup_users:
-            lookup_cache = replace_with_key_value_lookup(
+            lookup_cache = _replace_with_key_value_lookup(
                 parent_node=users,
                 key_value_pairs=[
                     ("excludeUserNames", "excludeUsers"),
@@ -169,7 +226,7 @@ def replace_values_by_keys_in_policies(
                 lookup_cache=lookup_cache,
             )
         if lookup_roles:
-            lookup_cache = replace_with_key_value_lookup(
+            lookup_cache = _replace_with_key_value_lookup(
                 parent_node=users,
                 key_value_pairs=[
                     ("includeRoleNames", "includeRoles"),
@@ -194,12 +251,12 @@ def replace_values_by_keys_in_policies(
 
 def replace_keys_by_values_in_policies(
     access_token: str,
-    policies: dict,
+    policies: list[dict],
     *,
     lookup_groups: bool = True,
     lookup_users: bool = True,
     lookup_roles: bool = True,
-) -> dict:
+) -> list[dict]:
     """Replaces keys by values in a policies file
     e.g.: "includeGroups": ["<group-id>"] -> "includeGroupNames": ["<group-name>"]
     This is useful when you want to export a policies file that can be imported in a
@@ -225,7 +282,7 @@ def replace_keys_by_values_in_policies(
         conditions = policy["conditions"]
         users = conditions["users"]
         if lookup_groups:
-            lookup_cache = replace_with_key_value_lookup(
+            lookup_cache = _replace_with_key_value_lookup(
                 parent_node=users,
                 key_value_pairs=[
                     ("excludeGroups", "excludeGroupNames"),
@@ -235,7 +292,7 @@ def replace_keys_by_values_in_policies(
                 lookup_cache=lookup_cache,
             )
         if lookup_users:
-            lookup_cache = replace_with_key_value_lookup(
+            lookup_cache = _replace_with_key_value_lookup(
                 parent_node=users,
                 key_value_pairs=[
                     ("excludeUsers", "excludeUserNames"),
@@ -245,7 +302,7 @@ def replace_keys_by_values_in_policies(
                 lookup_cache=lookup_cache,
             )
         if lookup_roles:
-            lookup_cache = replace_with_key_value_lookup(
+            lookup_cache = _replace_with_key_value_lookup(
                 parent_node=users,
                 key_value_pairs=[
                     ("excludeRoles", "excludeRoleNames"),
