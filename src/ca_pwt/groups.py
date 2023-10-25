@@ -1,6 +1,6 @@
 import requests
 import logging
-from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT
+from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT, DuplicateActionEnum
 from ca_pwt.helpers.utils import assert_condition, cleanup_odata_dict, remove_element_from_dict, ensure_list
 
 _logger = logging.getLogger(__name__)
@@ -94,26 +94,21 @@ def get_groups_by_ids(access_token: str, group_ids: list[str], *, ignore_not_fou
     return result
 
 
-def import_groups(access_token: str, groups: list[dict], *, allow_duplicates: bool = False) -> list[tuple[str, str]]:
+def import_groups(
+    access_token: str, groups: list[dict], duplicate_action: DuplicateActionEnum = DuplicateActionEnum.ignore
+) -> list[tuple[str, str]]:
     """Imports groups from the specified dictionary.
     Returns a list of tuples with the group id and name of the imported groups.
     """
     _logger.info("Importing groups...")
     groups_api = GroupsAPI(access_token=access_token)
+    groups = cleanup_groups(groups)
     result: list[tuple[str, str]] = []
     for group in groups:
         group_name = group["displayName"]
-
-        if not allow_duplicates:
-            existing_group = groups_api.get_by_display_name(group_name)
-            if existing_group.success:
-                _logger.warning(f"Group with display name {group_name} already exists. Skipping...")
-                continue
-
-        group_response = groups_api.create(group)
-        group_response.assert_success()
-        group_detail = group_response.json()
-        group_id = group_detail["id"]
+        response = groups_api.create_checking_duplicates(group, f"displayName eq '{group_name}'", duplicate_action)
+        response.assert_success()
+        group_id = response.json()["id"]
         result.append((group_id, group_name))
         _logger.info(f"Imported group {group_name} with id {group_id}")
     return result
