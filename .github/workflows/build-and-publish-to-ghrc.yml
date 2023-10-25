@@ -1,5 +1,5 @@
 ---
-name: Release->Build and Publish ghrc
+name: Release->Build and Publish to GHRC
 # yamllint disable rule:line-length
 
 on:
