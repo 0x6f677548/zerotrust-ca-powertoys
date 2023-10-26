@@ -1,6 +1,6 @@
 import logging
 from ca_pwt.helpers.utils import remove_element_from_dict, cleanup_odata_dict, ensure_list
-from ca_pwt.helpers.graph_api import EntityAPI
+from ca_pwt.helpers.graph_api import EntityAPI, DuplicateActionEnum
 from ca_pwt.policies_mappings import replace_values_by_keys_in_policies
 from ca_pwt.groups import get_groups_by_ids
 
@@ -70,8 +70,7 @@ def export_policies(access_token: str, odata_filter: str | None = None) -> list[
 def import_policies(
     access_token: str,
     policies: list[dict],
-    *,
-    allow_duplicates: bool = False,
+    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ) -> list[tuple[str, str]]:
     """Imports the specified policies. If allow_duplicates is False,
     it will skip policies that already exist (using the display name as
@@ -88,20 +87,10 @@ def import_policies(
     for policy in policies:
         display_name: str = str(policy.get("displayName"))
 
-        # check if the policy already exists
-        if not allow_duplicates:
-            existing_policy = policies_api.get_by_display_name(display_name)
-            if existing_policy.success:
-                _logger.warning(f"Policy with display name {display_name} already exists. Skipping...")
-                continue
-
-        _logger.info(f"Creating policy {display_name}...")
-        _logger.debug(f"Policy: {policy}")
-        response = policies_api.create(policy)
+        response = policies_api.create_checking_duplicates(policy, f"displayName eq '{display_name}'", duplicate_action)
         response.assert_success()
-
         policy_id = response.json()["id"]
-        created_policies.append((display_name, policy_id))
+        created_policies.append((policy_id, display_name))
         _logger.info("Policy created successfully with id %s", policy_id)
     return created_policies
 

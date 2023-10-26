@@ -17,6 +17,7 @@ from ca_pwt.groups import (
     cleanup_groups,
     import_groups,
 )
+from ca_pwt.helpers.graph_api import DuplicateActionEnum
 
 from ca_pwt.policies_mappings import replace_keys_by_values_in_policies, replace_values_by_keys_in_policies
 
@@ -58,6 +59,13 @@ _allow_duplicates_option = click.option(
     default=False,
     help="Indicates if duplicates should be allowed and imported. "
     "Duplicates are checked by comparing the displayName of Policies/Groups",
+)
+
+_duplicate_action_option = click.option(
+    "--duplicate_action",
+    type=click.Choice([action.value for action in DuplicateActionEnum], case_sensitive=True),
+    help="The action to take when a duplicate is found (default is ignore). ",
+    default=DuplicateActionEnum.IGNORE.value,
 )
 
 
@@ -356,13 +364,12 @@ def cleanup_groups_cmd(ctx: click.Context, input_file: str, output_file: str):
 @click.pass_context
 @_access_token_option
 @_input_file_option
-@_allow_duplicates_option
+@_duplicate_action_option
 def import_policies_cmd(
     ctx: click.Context,
     input_file: str,
     access_token: str | None = None,
-    *,
-    allow_duplicates: bool = False,
+    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ):
     """Imports CA policies from a file"""
     try:
@@ -378,7 +385,11 @@ def import_policies_cmd(
         click.echo(f"Input file: {input_file}")
 
         policies = load_policies(input_file)
-        created_policies = import_policies(access_token, policies, allow_duplicates=allow_duplicates)
+
+        created_policies = import_policies(
+            access_token=access_token, policies=policies, duplicate_action=duplicate_action
+        )
+
         click.echo("Successfully created policies:")
         for policy in created_policies:
             click.echo(f"{policy[0]}: {policy[1]}")
@@ -427,13 +438,12 @@ def export_groups_cmd(
 @click.pass_context
 @_access_token_option
 @_input_file_option
-@_allow_duplicates_option
+@_duplicate_action_option
 def import_groups_cmd(
     ctx: click.Context,
     input_file: str,
     access_token: str | None = None,
-    *,
-    allow_duplicates: bool = False,
+    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ):
     """Imports groups from a file"""
     try:
@@ -453,7 +463,7 @@ def import_groups_cmd(
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         click.echo(f"Input file: {input_file}")
         groups = load_groups(input_file)
-        created_groups = import_groups(access_token, groups, allow_duplicates=allow_duplicates)
+        created_groups = import_groups(access_token=access_token, groups=groups, duplicate_action=duplicate_action)
         click.echo("Successfully created groups:")
         for group in created_groups:
             click.echo(f"{group[0]}: {group[1]}")
