@@ -2,7 +2,7 @@ import requests
 import logging
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import Any, Callable
+from typing import Any
 from ca_pwt.helpers.utils import assert_condition
 
 _REQUEST_TIMEOUT = 500
