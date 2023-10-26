@@ -70,7 +70,7 @@ def export_policies(access_token: str, odata_filter: str | None = None) -> list[
 def import_policies(
     access_token: str,
     policies: list[dict],
-    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.ignore,
+    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ) -> list[tuple[str, str]]:
     """Imports the specified policies. If allow_duplicates is False,
     it will skip policies that already exist (using the display name as

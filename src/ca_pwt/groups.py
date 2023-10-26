@@ -95,7 +95,7 @@ def get_groups_by_ids(access_token: str, group_ids: list[str], *, ignore_not_fou
 
 
 def import_groups(
-    access_token: str, groups: list[dict], duplicate_action: DuplicateActionEnum = DuplicateActionEnum.ignore
+    access_token: str, groups: list[dict], duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE
 ) -> list[tuple[str, str]]:
     """Imports groups from the specified dictionary.
     Returns a list of tuples with the group id and name of the imported groups.

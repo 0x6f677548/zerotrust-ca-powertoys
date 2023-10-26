@@ -65,7 +65,7 @@ _duplicate_action_option = click.option(
     "--duplicate_action",
     type=click.Choice([action.value for action in DuplicateActionEnum], case_sensitive=True),
     help="The action to take when a duplicate is found (default is ignore). ",
-    default=DuplicateActionEnum.ignore.value,
+    default=DuplicateActionEnum.IGNORE.value,
 )
 
 
@@ -369,7 +369,7 @@ def import_policies_cmd(
     ctx: click.Context,
     input_file: str,
     access_token: str | None = None,
-    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.ignore,
+    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ):
     """Imports CA policies from a file"""
     try:
@@ -443,7 +443,7 @@ def import_groups_cmd(
     ctx: click.Context,
     input_file: str,
     access_token: str | None = None,
-    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.ignore,
+    duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ):
     """Imports groups from a file"""
     try:

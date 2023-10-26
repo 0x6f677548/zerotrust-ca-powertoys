@@ -1,17 +1,18 @@
 import requests
 import logging
-from ca_pwt.helpers.utils import assert_condition
 from abc import ABC, abstractmethod
 from enum import StrEnum
+from typing import Any, Callable
+from ca_pwt.helpers.utils import assert_condition
 
 _REQUEST_TIMEOUT = 500
 
 
 class DuplicateActionEnum(StrEnum):
-    ignore = "ignore"
-    replace = "replace"
-    duplicate = "duplicate"
-    fail = "fail"
+    IGNORE = "ignore"
+    REPLACE = "replace"
+    DUPLICATE = "duplicate"
+    FAIL = "fail"
 
 
 class APIResponse:
@@ -27,7 +28,7 @@ class APIResponse:
         the success property will be set to True
         """
         self.status_code = request_response.status_code
-        self.response: requests.Response | str = request_response
+        self.response: requests.Response | str | dict[str, Any] = request_response
         self.expected_status_code = expected_status_code
         self.success = self.status_code == self.expected_status_code
         if self._logger.isEnabledFor(logging.DEBUG):
@@ -68,11 +69,14 @@ class EntityAPI(ABC):
         """Returns the path to the entity in the Microsoft Graph API"""
         pass
 
+
+
     def _request_get(self, url: str) -> APIResponse:
         """Sends a GET request to the API"""
         self._logger.debug(f"GET {url}")
         return APIResponse(
-            requests.get(url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT), expected_status_code=200
+            requests.get(url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT),
+            expected_status_code=200
         )
 
     def _request_post(self, url: str, entity: dict) -> APIResponse:
@@ -155,7 +159,7 @@ class EntityAPI(ABC):
         return self._request_post(self.entity_url, entity)
 
     def create_checking_duplicates(
-        self, entity: dict, odata_filter: str, duplicate_action: DuplicateActionEnum = DuplicateActionEnum.ignore
+        self, entity: dict, odata_filter: str, duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE
     ) -> APIResponse:
         """Creates an entity checking for duplicates first and taking the specified action if a duplicate is found
         A duplicate is determined by the odata_filter parameter, getting the top entity with the specified filter"""
@@ -163,15 +167,15 @@ class EntityAPI(ABC):
         assert_condition(odata_filter, "odata_filter cannot be None")
 
         # if duplicate_action is not duplicate, check if the entity already exists
-        if duplicate_action != DuplicateActionEnum.duplicate:
+        if duplicate_action != DuplicateActionEnum.DUPLICATE:
             existing_entity = self.get_top_entity(odata_filter)
             if existing_entity.success:
-                if duplicate_action == DuplicateActionEnum.ignore:
+                if duplicate_action == DuplicateActionEnum.IGNORE:
                     self._logger.warning(
                         f"Entity {self._get_entity_path()} with filter {odata_filter} already exists. Skipping..."
                     )
                     return existing_entity
-                elif duplicate_action == DuplicateActionEnum.replace:
+                elif duplicate_action == DuplicateActionEnum.REPLACE:
                     existing_entity_id = existing_entity.json()["id"]
                     self._logger.warning(f"Replacing entity {self._get_entity_path()} with id {existing_entity_id}...")
                     response = self.update(existing_entity_id, entity)
@@ -180,7 +184,7 @@ class EntityAPI(ABC):
                     # we need to return the existing_entity_id in the response body
                     response.response = {"id": existing_entity_id}
                     return response
-                elif duplicate_action == DuplicateActionEnum.fail:
+                elif duplicate_action == DuplicateActionEnum.FAIL:
                     msg = f"Entity {self._get_entity_path()} with filter {odata_filter} already exists."
                     raise ValueError(msg)
                 else:
