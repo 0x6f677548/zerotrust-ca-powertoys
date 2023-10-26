@@ -69,14 +69,11 @@ class EntityAPI(ABC):
         """Returns the path to the entity in the Microsoft Graph API"""
         pass
 
-
-
     def _request_get(self, url: str) -> APIResponse:
         """Sends a GET request to the API"""
         self._logger.debug(f"GET {url}")
         return APIResponse(
-            requests.get(url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT),
-            expected_status_code=200
+            requests.get(url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT), expected_status_code=200
         )
 
     def _request_post(self, url: str, entity: dict) -> APIResponse:
