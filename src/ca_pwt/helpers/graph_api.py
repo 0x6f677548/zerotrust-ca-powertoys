@@ -1,11 +1,17 @@
 import requests
 import logging
+import time
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import Any
+from typing import Any, Callable
+from requests.models import Response
 from ca_pwt.helpers.utils import assert_condition
 
 _REQUEST_TIMEOUT = 500
+_THROTTLING_STATUS_CODE = 429
+_THROTTLING_RETRY_AFTER_HEADER = "Retry-After"
+_THROTTLING_RETRY_AFTER_DEFAULT = 10
+_THROTTLING_MAX_RETRIES = 5
 
 
 class DuplicateActionEnum(StrEnum):
@@ -69,30 +75,72 @@ class EntityAPI(ABC):
         """Returns the path to the entity in the Microsoft Graph API"""
         pass
 
+    def _request_with_throttling_control(self, func: Callable[..., Response], *args, **kwargs) -> Response:
+        """Sends a request to the API with throttling control"""
+        # set the number of retries to 0
+        retries = 0
+        # while we have not exceeded the maximum number of retries
+        while retries < _THROTTLING_MAX_RETRIES:
+            # send the request
+            response = func(*args, **kwargs)
+            # if the request failed with a throttling error
+            if response.status_code == _THROTTLING_STATUS_CODE:
+                # get the retry after header
+                retry_after_header = response.headers.get(_THROTTLING_RETRY_AFTER_HEADER)
+                if retry_after_header is not None:
+                    retry_after = int(retry_after_header)
+                else:
+                    retry_after = _THROTTLING_RETRY_AFTER_DEFAULT
+                # log the throttling error
+                self._logger.warning(
+                    f"Throttling error: {response.status_code}  {response.text}. "
+                    "Retrying in {retry_after} seconds..."
+                )
+                # wait for the specified number of seconds
+                time.sleep(retry_after)
+                # increment the number of retries
+                retries += 1
+            else:
+                break
+        return response
+
     def _request_get(self, url: str) -> APIResponse:
         """Sends a GET request to the API"""
         self._logger.debug(f"GET {url}")
         return APIResponse(
-            requests.get(url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT), expected_status_code=200
+            self._request_with_throttling_control(
+                requests.get, url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT
+            ),
+            expected_status_code=200,
         )
 
     def _request_post(self, url: str, entity: dict) -> APIResponse:
         """Sends a POST request to the API"""
         self._logger.debug(f"POST {url}")
-        return APIResponse(requests.post(url, headers=self.request_headers, json=entity, timeout=_REQUEST_TIMEOUT), 201)
+        return APIResponse(
+            self._request_with_throttling_control(
+                requests.post, url, headers=self.request_headers, json=entity, timeout=_REQUEST_TIMEOUT
+            ),
+            expected_status_code=201,
+        )
 
     def _request_delete(self, url: str) -> APIResponse:
         """Sends a DELETE request to the API"""
         self._logger.debug(f"DELETE {url}")
         return APIResponse(
-            requests.delete(url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT), expected_status_code=204
+            self._request_with_throttling_control(
+                requests.delete, url, headers=self.request_headers, timeout=_REQUEST_TIMEOUT
+            ),
+            expected_status_code=204,
         )
 
     def _request_patch(self, url: str, entity: dict) -> APIResponse:
         """Sends a PATCH request to the API"""
         self._logger.debug(f"PATCH {url}")
         return APIResponse(
-            requests.patch(url, headers=self.request_headers, json=entity, timeout=_REQUEST_TIMEOUT),
+            self._request_with_throttling_control(
+                requests.patch, url, headers=self.request_headers, json=entity, timeout=_REQUEST_TIMEOUT
+            ),
             expected_status_code=204,
         )
 

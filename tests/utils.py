@@ -1,7 +1,9 @@
 import os
 import json
 
-SLEEP_BETWEEN_TESTS = 5
+# in case of rate limit errors, increase this value to 5 or more.
+# This will slow down the tests but will avoid rate limit errors
+SLEEP_BETWEEN_TESTS = 0
 
 
 def assert_valid_output_file(output_file):
