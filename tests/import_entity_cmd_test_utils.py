@@ -94,8 +94,8 @@ def _test_import_entity_duplicate(access_token: str, cli: BaseCommand, entity_ap
         )
 
 
-def _test_import_entity_replace(access_token: str, cli: BaseCommand, entity_api: EntityAPI, test_entity: dict):
-    """Tests if the import entity command works as expected when replacing"""
+def _test_import_entity_overwrite(access_token: str, cli: BaseCommand, entity_api: EntityAPI, test_entity: dict):
+    """Tests if the import entity command works as expected when overwriting"""
     runner = CliRunner()
 
     with runner.isolated_filesystem():
@@ -111,13 +111,13 @@ def _test_import_entity_replace(access_token: str, cli: BaseCommand, entity_api:
         for _ in range(2):
             result = runner.invoke(
                 cli,
-                ["--access_token", access_token, "--input_file", test_data_file, "--duplicate_action", "replace"],
+                ["--access_token", access_token, "--input_file", test_data_file, "--duplicate_action", "overwrite"],
             )
             assert result is not None
             assert result.exit_code == 0
 
         # check if the policies were imported
-        _assert_entity_existence(entity_api, test_entity["displayName"], 1, "Test entity was not imported or replaced.")
+        _assert_entity_existence(entity_api, test_entity["displayName"], 1, "Test entity was not imported or overwritten.")
 
 
 def _test_import_entity_fail(access_token: str, cli: BaseCommand, entity_api: EntityAPI, test_entity: dict):

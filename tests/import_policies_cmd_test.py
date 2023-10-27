@@ -10,7 +10,7 @@ from .import_entity_cmd_test_utils import (
     _test_import_entity_ignore,
     _test_import_entity_invalid_data,
     _test_import_entity_fail,
-    _test_import_entity_replace,
+    _test_import_entity_overwrite,
     remove_entities,
 )
 
@@ -41,9 +41,9 @@ def test_import_policies_duplicating(access_token: str):
     _test_import_entity_duplicate(access_token, import_policies_cmd, PoliciesAPI(access_token), VALID_POLICIES[0])
 
 
-def test_import_policies_replace(access_token: str):
-    """Tests if the import-policies command works as expected when replacing"""
-    _test_import_entity_replace(access_token, import_policies_cmd, PoliciesAPI(access_token), VALID_POLICIES[0])
+def test_import_policies_overwrite(access_token: str):
+    """Tests if the import-policies command works as expected when overwriting"""
+    _test_import_entity_overwrite(access_token, import_policies_cmd, PoliciesAPI(access_token), VALID_POLICIES[0])
 
 
 def test_import_policies_fail(access_token: str):
