@@ -16,7 +16,7 @@ _THROTTLING_MAX_RETRIES = 5
 
 class DuplicateActionEnum(StrEnum):
     IGNORE = "ignore"
-    REPLACE = "replace"
+    OVERWRITE = "overwrite"
     DUPLICATE = "duplicate"
     FAIL = "fail"
 
@@ -220,7 +220,7 @@ class EntityAPI(ABC):
                         f"Entity {self._get_entity_path()} with filter {odata_filter} already exists. Skipping..."
                     )
                     return existing_entity
-                elif duplicate_action == DuplicateActionEnum.REPLACE:
+                elif duplicate_action == DuplicateActionEnum.OVERWRITE:
                     existing_entity_id = existing_entity.json()["id"]
                     self._logger.warning(f"Replacing entity {self._get_entity_path()} with id {existing_entity_id}...")
                     response = self.update(existing_entity_id, entity)

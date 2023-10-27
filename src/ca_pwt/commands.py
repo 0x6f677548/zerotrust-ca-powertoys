@@ -53,13 +53,6 @@ _ignore_not_found_option = click.option(
     help="Indicates if not found errors should be ignored when exporting groups",
 )
 
-_allow_duplicates_option = click.option(
-    "--allow_duplicates",
-    is_flag=True,
-    default=False,
-    help="Indicates if duplicates should be allowed and imported. "
-    "Duplicates are checked by comparing the displayName of Policies/Groups",
-)
 
 _duplicate_action_option = click.option(
     "--duplicate_action",
