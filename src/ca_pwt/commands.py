@@ -19,7 +19,7 @@ from ca_pwt.groups import (
 )
 from ca_pwt.helpers.graph_api import DuplicateActionEnum
 
-from ca_pwt.policies_mappings import replace_keys_by_values_in_policies, replace_values_by_keys_in_policies
+from ca_pwt.policies_mappings import replace_guids_with_attrs_in_policies, replace_attrs_with_guids_in_policies
 
 _logger = logging.getLogger(__name__)
 
@@ -183,26 +183,28 @@ def acquire_token_cmd(
 
 
 @click.command(
-    "replace-keys-by-values",
-    help="Replaces keys by values in CA policies"
-    " (e.g. group ids by group names, user ids by user principal names, etc.)",
+    "replace-guids-with-attrs",
+    help="Makes the CA policies file human-readable, by replacing guids with "
+    " correspondent attributes "
+    "(e.g. group ids by group names, user ids by user principal names, etc.)",
 )
 @click.pass_context
 @_access_token_option
 @_output_file_option
 @_input_file_option
-def replace_keys_by_values_cmd(
+def replace_guids_with_attrs_cmd(
     ctx: click.Context,
     input_file: str,
     output_file: str,
     access_token: str | None = None,
 ):
-    """Replaces keys by values in CA policies"""
+    """Makes the CA policies file human-readable, by replacing guids with
+    correspondent attributes (e.g. group ids by group names, user ids by user principal names, etc.)"""
 
     try:
         ctx.ensure_object(dict)
         click.secho(
-            "Replacing keys by values in CA policies...",
+            "Replacing guids with attributes in CA policies...",
             fg="yellow",
         )
         access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
@@ -211,7 +213,7 @@ def replace_keys_by_values_cmd(
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
-        policies = replace_keys_by_values_in_policies(access_token, policies)
+        policies = replace_guids_with_attrs_in_policies(access_token, policies)
 
         save_policies(policies=policies, output_file=output_file)
 
@@ -222,26 +224,28 @@ def replace_keys_by_values_cmd(
 
 
 @click.command(
-    "replace-values-by-keys",
-    help="Replaces values by keys in CA policies"
-    " (e.g. group names by group ids, user principal names by user ids, etc.)",
+    "replace-attrs-with-guids",
+    help="Makes the CA policies file machine-readable, by replacing attributes with "
+    " correspondent guids "
+    "(e.g. group names by group ids, user principal names by user ids, etc.)",
 )
 @click.pass_context
 @_access_token_option
 @_output_file_option
 @_input_file_option
-def replace_values_by_keys_cmd(
+def replace_attrs_with_guids_cmd(
     ctx: click.Context,
     input_file: str,
     output_file: str,
     access_token: str | None = None,
 ):
-    """Replaces values by keys in CA policies"""
+    """Makes the CA policies file machine-readable, by replacing attributes with
+    correspondent guids (e.g. group names by group ids, user principal names by user ids, etc.)"""
 
     try:
         ctx.ensure_object(dict)
         click.secho(
-            "Replacing values by keys in CA policies...",
+            "Replacing attributes with guids in CA policies...",
             fg="yellow",
         )
 
@@ -252,7 +256,7 @@ def replace_values_by_keys_cmd(
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
-        policies = replace_values_by_keys_in_policies(access_token, policies)
+        policies = replace_attrs_with_guids_in_policies(access_token, policies)
 
         save_policies(policies=policies, output_file=output_file)
 
@@ -302,7 +306,8 @@ def export_policies_cmd(
 
 @click.command(
     "cleanup-policies",
-    help="Cleans up CA policies file for import (e.g. removes createdDateTime, modifiedDateTime, id, templateId",
+    help="Removes read-only and unnecessary odata attributes from the provided policies JSON file, "
+    "preparing it for successful import.",
 )
 @click.pass_context
 @_output_file_option
@@ -328,7 +333,11 @@ def cleanup_policies_cmd(ctx: click.Context, input_file: str, output_file: str):
         _exit_with_exception(e)
 
 
-@click.command("cleanup-groups", help="Cleans up groups file for import")
+@click.command(
+    "cleanup-groups",
+    help="Removes read-only and unnecessary odata attributes from the provided groups "
+    "JSON file, preparing it for successful import.",
+)
 @click.pass_context
 @_output_file_option
 @_input_file_option

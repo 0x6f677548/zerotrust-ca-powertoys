@@ -1,7 +1,7 @@
 import logging
 from ca_pwt.helpers.utils import remove_element_from_dict, cleanup_odata_dict, ensure_list
 from ca_pwt.helpers.graph_api import EntityAPI, DuplicateActionEnum
-from ca_pwt.policies_mappings import replace_values_by_keys_in_policies
+from ca_pwt.policies_mappings import replace_attrs_with_guids_in_policies
 from ca_pwt.groups import get_groups_by_ids
 from typing import Any
 
@@ -81,7 +81,7 @@ def import_policies(
     are not allowed when importing."""
 
     policies_api = PoliciesAPI(access_token=access_token)
-    policies = replace_values_by_keys_in_policies(access_token, policies)
+    policies = replace_attrs_with_guids_in_policies(access_token, policies)
     # make sure the policies are cleaned up
     policies = cleanup_policies(policies)
     created_policies: list[tuple[str, str]] = []
@@ -106,7 +106,7 @@ def get_groups_in_policies(
     If ignore_not_found is True, groups that are not found are ignored.
     Returns a dictionary with the groups."""
     # make sure that all groups are in the key format
-    policies = replace_values_by_keys_in_policies(
+    policies = replace_attrs_with_guids_in_policies(
         access_token,
         policies,
         lookup_groups=True,

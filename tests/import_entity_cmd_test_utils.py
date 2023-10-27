@@ -117,7 +117,9 @@ def _test_import_entity_overwrite(access_token: str, cli: BaseCommand, entity_ap
             assert result.exit_code == 0
 
         # check if the policies were imported
-        _assert_entity_existence(entity_api, test_entity["displayName"], 1, "Test entity was not imported or overwritten.")
+        _assert_entity_existence(
+            entity_api, test_entity["displayName"], 1, "Test entity was not imported or overwritten."
+        )
 
 
 def _test_import_entity_fail(access_token: str, cli: BaseCommand, entity_api: EntityAPI, test_entity: dict):

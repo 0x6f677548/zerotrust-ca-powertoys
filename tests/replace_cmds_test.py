@@ -2,8 +2,8 @@ import json
 import time
 import pytest
 from src.ca_pwt.commands import (
-    replace_keys_by_values_cmd,
-    replace_values_by_keys_cmd,
+    replace_guids_with_attrs_cmd,
+    replace_attrs_with_guids_cmd,
 )
 from click.testing import CliRunner
 from .utils import assert_valid_output_file, SLEEP_BETWEEN_TESTS, VALID_POLICIES
@@ -16,7 +16,7 @@ def run_around_tests():
     time.sleep(SLEEP_BETWEEN_TESTS)
 
 
-def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
+def test_replace_guids_with_attrs_and_replace_attrs_with_guids(access_token: str):
     """Tests if the replace command works as expected"""
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -33,7 +33,7 @@ def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
         assert_valid_output_file(test_data_file)
 
         result = runner.invoke(
-            replace_keys_by_values_cmd,
+            replace_guids_with_attrs_cmd,
             [
                 "--access_token",
                 access_token,
@@ -87,7 +87,7 @@ def test_replace_keys_by_values_replace_values_by_keys(access_token: str):
             f.write(json.dumps(data, indent=4))
 
         result = runner.invoke(
-            replace_values_by_keys_cmd,
+            replace_attrs_with_guids_cmd,
             [
                 "--access_token",
                 access_token,

@@ -174,7 +174,7 @@ def _replace_with_key_value_lookup(
     return lookup_cache
 
 
-def replace_values_by_keys_in_policies(
+def replace_attrs_with_guids_in_policies(
     access_token: str,
     policies: list[dict],
     *,
@@ -249,7 +249,7 @@ def replace_values_by_keys_in_policies(
     return policies
 
 
-def replace_keys_by_values_in_policies(
+def replace_guids_with_attrs_in_policies(
     access_token: str,
     policies: list[dict],
     *,
