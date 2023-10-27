@@ -3,6 +3,7 @@ from ca_pwt.helpers.utils import remove_element_from_dict, cleanup_odata_dict, e
 from ca_pwt.helpers.graph_api import EntityAPI, DuplicateActionEnum
 from ca_pwt.policies_mappings import replace_values_by_keys_in_policies
 from ca_pwt.groups import get_groups_by_ids
+from typing import Any
 
 _logger = logging.getLogger(__name__)
 
@@ -114,18 +115,17 @@ def get_groups_in_policies(
     )
 
     groups_found: list[str] = []
+
+    def add_groups(groups: Any | None):
+        if groups is not None:
+            for group in groups:
+                if group not in groups_found:
+                    groups_found.append(group)
+
     for policy in policies:
         conditions: dict = policy["conditions"]
         users: dict = conditions["users"]
-        exclude_groups = users.get("excludeGroups")
-        if exclude_groups is not None:
-            for group in exclude_groups:
-                if group not in groups_found:
-                    groups_found.append(group)
-        include_groups = users.get("includeGroups")
-        if include_groups is not None:
-            for group in include_groups:
-                if group not in groups_found:
-                    groups_found.append(group)
+        add_groups(users.get("excludeGroups"))
+        add_groups(users.get("includeGroups"))
     _logger.debug(f"Groups found in policies: {groups_found}")
     return get_groups_by_ids(access_token, groups_found, ignore_not_found=ignore_not_found)
