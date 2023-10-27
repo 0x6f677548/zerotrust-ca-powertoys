@@ -17,7 +17,7 @@ from ca_pwt.groups import (
     cleanup_groups,
 )
 
-from ca_pwt.policies_mappings import replace_values_by_keys_in_policies, replace_keys_by_values_in_policies
+from ca_pwt.policies_mappings import replace_attrs_with_guids_in_policies, replace_guids_with_attrs_in_policies
 
 from ca_pwt.policies import (
     load_policies,

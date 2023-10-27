@@ -2,9 +2,9 @@ import click
 from ca_pwt.commands import (
     export_policies_cmd,
     import_policies_cmd,
-    replace_values_by_keys_cmd,
+    replace_attrs_with_guids_cmd,
     cleanup_policies_cmd,
-    replace_keys_by_values_cmd,
+    replace_guids_with_attrs_cmd,
     acquire_token_cmd,
     export_groups_cmd,
     import_groups_cmd,
@@ -16,7 +16,10 @@ from ca_pwt.commands import (
 @click.group(
     name="CA-PowerToys",
     chain=True,
-    help="A set of tools to help manage Conditional Access policies in Entra ID",
+    help="A set of tools designed to streamline the management of Conditional Access policies in Entra ID. "
+    "These tools specialize in importing and exporting CA policies and groups, optimizing files for human and machine "
+    "readability as needed. Additionally, they facilitate the removal of extraneous attributes for smoother "
+    "editing workflows, and facilitate a devops-like workflow for managing CA policies.",
 )
 @click.option(
     "--log_level",
@@ -40,9 +43,9 @@ def cli(ctx: click.Context, access_token: str, log_level: str):
 cli.add_command(acquire_token_cmd)
 cli.add_command(import_policies_cmd)
 cli.add_command(export_policies_cmd)
-cli.add_command(replace_values_by_keys_cmd)
+cli.add_command(replace_attrs_with_guids_cmd)
 cli.add_command(cleanup_policies_cmd)
-cli.add_command(replace_keys_by_values_cmd)
+cli.add_command(replace_guids_with_attrs_cmd)
 cli.add_command(export_groups_cmd)
 cli.add_command(import_groups_cmd)
 cli.add_command(cleanup_groups_cmd)

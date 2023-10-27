@@ -125,7 +125,7 @@ Writing policies to file policies.json...
 ### Exporting all Policies and associated Groups, replace keys with values in the policies file and cleanup for import
     
 ```console
-> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-keys-by-values export-groups --output_file groups.json cleanup-groups
+> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-guids-with-attrs export-groups --output_file groups.json cleanup-groups
 ```
 ```
 Exporting ca policies...
