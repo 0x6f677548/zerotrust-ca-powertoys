@@ -5,14 +5,11 @@
 [![GitHub - Lint](https://github.com/0x6f677548/ca-powertoys/actions/workflows/lint.yml/badge.svg)](https://github.com/0x6f677548/ca-powertoys/actions/workflows/lint.yml)
 [![GitHub - Test](https://github.com/0x6f677548/ca-powertoys/actions/workflows/test.yml/badge.svg)](https://github.com/0x6f677548/ca-powertoys/actions/workflows/test.yml)
 
-CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export, import, and clean up Conditional Access policies. It can also be used to export groups that are used in Conditional Access policies and import them into another tenant.
+CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export and import Conditional Access policies and associated groups, facilitating the editing of the policies in a human readable format. 
 
 # Why ?
-There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace keys by values, and import Conditional Access policies and groups.  
-
-Here are a couple of examples of how CA-PowerToys can help you:
-- Export Conditional Access policies from one tenant and import them into another tenant using Graph PowerShell
-- Export Conditional Access policies and groups from one tenant and store them in a Git repository. Then, use a CI/CD pipeline to import them into another tenant using Graph PowerShell or CA-PowerToys
+There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace guids with attributes, and import Conditional Access policies and groups. 
+This is specially useful if you are implementing infrastructure as code and want to store your Conditional Access policies in a Git repository, and then use a CI/CD pipeline to import them into another tenant.
 
 # Capabilities
 
@@ -20,14 +17,13 @@ CA-PowerToys can be used to:
 - **Get an access token** to be used in subsequent commands or to be used in other tools, such as Graph PowerShell, using a desired client_id (useful if Graph PowerShell or other tools are blocked in the target tenant)
 - **Export/Import Conditional Access policies** to/from a file
 - **Export groups** that are used in Conditional Access policies to a file
-- **Clean up Conditional Access policies for import**, removing keys that are not allowed in the import process
-- **Replace keys by values in Conditional Access policies**, for example, replace the Id of a group by its name
-- **Clean up groups for import**, removing keys that are not allowed in the import process
+- **Clean up Conditional Access policies and Groups files**, removing attributes that are read-only or not allowed in the import process
+- **Replace guids with attributes in Conditional Access policies (and vice-versa)**, making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
 
 
 
 # Installation
-CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool.
+CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool, as long as you have Python >3.7 installed (or Docker).
 
 ## pip
 To install it, you can use pip:
@@ -52,7 +48,7 @@ Alternatively, you can use the Docker image:
 ```
 
 # Usage
-CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool. Since it uses Click, it is self-documented and you can use the `--help` option to get help on the commands and options.
+All available commands and options can be seen by using the `--help` option.
 ```console
 > ca-pwt --help
 ```
@@ -100,6 +96,14 @@ If you are in an endpoint where you can't use the interactive login, you can use
 To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code 123456789 to authenticate.
 ```
 
+#### Using the tool in a CI/CD pipeline
+If you are using the tool in a CI/CD pipeline, CA-PowerToys supports authentication through a service principal, using the `--client_id` and `--client_secret` options. In this case, you need to instruct the command to output the token using the `--output_token` option. You should also use the `--tenant_id` option to specify the tenant where the service principal was created.
+```console
+> $token = (ca-pwt acquire-token --client_id $client_id --client_secret $client_secret --tenant_id $tenant_id --output_token)
+> ca-pwt --access_token $token import-policies --input_file policies.json --duplicate_action overwrite
+```
+
+
 ### Exporting policies
     
 ```console
@@ -125,7 +129,7 @@ Writing policies to file policies.json...
 ### Exporting all Policies and associated Groups, replace keys with values in the policies file and cleanup for import
     
 ```console
-> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-guids-with-attrs export-groups --output_file groups.json cleanup-groups
+> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-keys-by-values export-groups --output_file groups.json cleanup-groups
 ```
 ```
 Exporting ca policies...
