@@ -484,11 +484,7 @@ def import_groups_cmd(
 @click.pass_context
 @_access_token_option
 @_input_file_option
-def delete_groups_cmd(
-    ctx: click.Context,
-    input_file: str,
-    access_token: str | None = None
-):
+def delete_groups_cmd(ctx: click.Context, input_file: str, access_token: str | None = None):
     """Deletes groups with the specified ids in a file"""
     try:
         ctx.ensure_object(dict)
@@ -512,11 +508,7 @@ def delete_groups_cmd(
 @click.pass_context
 @_access_token_option
 @_input_file_option
-def delete_policies_cmd(
-    ctx: click.Context,
-    input_file: str,
-    access_token: str | None = None
-):
+def delete_policies_cmd(ctx: click.Context, input_file: str, access_token: str | None = None):
     """Deletes policies with the specified ids in a file"""
     try:
         ctx.ensure_object(dict)
