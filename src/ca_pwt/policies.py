@@ -90,7 +90,7 @@ def import_policies(
         display_name: str = str(policy.get("displayName"))
 
         response = policies_api.create_checking_duplicates(policy, f"displayName eq '{display_name}'", duplicate_action)
-        response.assert_success()
+        response.assert_success(error_message=f"Error creating policy with display name '{display_name}'")
         policy_id = response.json()["id"]
         created_policies.append((policy_id, display_name))
         _logger.info("Policy created successfully with id %s", policy_id)

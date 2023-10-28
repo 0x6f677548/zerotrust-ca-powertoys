@@ -51,9 +51,13 @@ class APIResponse:
         else:
             return self.response
 
-    def assert_success(self):
-        """Asserts that the request was successful"""
-        assert_condition(self.success, f"Request failed with status code {self.status_code}; {self.response}")
+    def assert_success(self, error_message: str = ""):
+        """Asserts that the request was successful
+        - error_message: the error message to display if the request was not successful
+        """
+        assert_condition(
+            self.success, f"{error_message}: Request failed with status code {self.status_code}; {self.response.json()}"
+        )
 
 
 class EntityAPI(ABC):
@@ -244,7 +248,6 @@ class EntityAPI(ABC):
         assert_condition(entity_id, "entity_id cannot be None")
         url = f"{self.entity_url}/{entity_id}"
         return self._request_delete(url)
-
 
     def update(self, entity_id: str, entity: dict) -> APIResponse:
         """Updates an entity by its ID"""
