@@ -4,6 +4,7 @@ from ca_pwt.helpers.graph_api import EntityAPI, DuplicateActionEnum
 from ca_pwt.policies_mappings import replace_attrs_with_guids_in_policies
 from ca_pwt.groups import get_groups_by_ids
 from typing import Any
+from ca_pwt.helpers.graph_api import _HTTP_NOT_FOUND
 
 _logger = logging.getLogger(__name__)
 
@@ -129,3 +130,19 @@ def get_groups_in_policies(
         add_groups(users.get("includeGroups"))
     _logger.debug(f"Groups found in policies: {groups_found}")
     return get_groups_by_ids(access_token, groups_found, ignore_not_found=ignore_not_found)
+
+
+def delete_policies(access_token: str, policies: list[dict]):
+    """Deletes policies that are in the specified list of policies (mandatory fields: id)."""
+    _logger.info("Deleting policies...")
+    entity_api = PoliciesAPI(access_token=access_token)
+
+    ids = [entity["id"] for entity in policies]
+
+    for entity_id in ids:
+        response = entity_api.delete(entity_id)
+        if response.status_code == _HTTP_NOT_FOUND:
+            _logger.warning(f"Policy with id {entity_id} was not found.")
+            continue
+        response.assert_success()
+        _logger.info(f"Deleting policy with id {entity_id}")

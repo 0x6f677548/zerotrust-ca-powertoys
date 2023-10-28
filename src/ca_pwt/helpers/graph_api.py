@@ -13,6 +13,8 @@ _THROTTLING_RETRY_AFTER_HEADER = "Retry-After"
 _THROTTLING_RETRY_AFTER_DEFAULT = 10
 _THROTTLING_MAX_RETRIES = 5
 
+_HTTP_NOT_FOUND = 404
+
 
 class DuplicateActionEnum(StrEnum):
     IGNORE = "ignore"
@@ -94,7 +96,7 @@ class EntityAPI(ABC):
                 # log the throttling error
                 self._logger.warning(
                     f"Throttling error: {response.status_code}  {response.text}. "
-                    "Retrying in {retry_after} seconds..."
+                    f"Retrying in {retry_after} seconds..."
                 )
                 # wait for the specified number of seconds
                 time.sleep(retry_after)
@@ -242,6 +244,7 @@ class EntityAPI(ABC):
         assert_condition(entity_id, "entity_id cannot be None")
         url = f"{self.entity_url}/{entity_id}"
         return self._request_delete(url)
+
 
     def update(self, entity_id: str, entity: dict) -> APIResponse:
         """Updates an entity by its ID"""

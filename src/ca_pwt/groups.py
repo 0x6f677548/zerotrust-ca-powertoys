@@ -1,11 +1,9 @@
 import requests
 import logging
-from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT, DuplicateActionEnum
+from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT, DuplicateActionEnum, _HTTP_NOT_FOUND
 from ca_pwt.helpers.utils import assert_condition, cleanup_odata_dict, remove_element_from_dict, ensure_list
 
 _logger = logging.getLogger(__name__)
-
-_HTTP_NOT_FOUND = 404
 
 
 class GroupsAPI(EntityAPI):
@@ -112,3 +110,17 @@ def import_groups(
         result.append((group_id, group_name))
         _logger.info(f"Imported group {group_name} with id {group_id}")
     return result
+
+
+def delete_groups(access_token: str, groups: list[dict]):
+    """Deletes groups that are in the specified list of groups (mandatory fields: id)."""
+    _logger.info("Deleting groups...")
+    groups_api = GroupsAPI(access_token=access_token)
+    for group in groups:
+        group_id = group["id"]
+        response = groups_api.delete(group_id)
+        if response.status_code == _HTTP_NOT_FOUND:
+            _logger.warning(f"Group with id {group_id} was not found.")
+            continue
+        response.assert_success()
+        _logger.info(f"Deleting group with id {group_id}")
