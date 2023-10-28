@@ -57,12 +57,33 @@ def cleanup_groups(source: list[dict]) -> list[dict]:
     # exclude some elements, namely createdDateTime,
     # modifiedDateTime, id, templateId, authenticationStrength@odata.context
     for group in source:
+        # readonly elements
         remove_element_from_dict(group, "createdDateTime")
         remove_element_from_dict(group, "modifiedDateTime")
         remove_element_from_dict(group, "id")
         remove_element_from_dict(group, "templateId")
         remove_element_from_dict(group, "deletedDateTime")
         remove_element_from_dict(group, "renewedDateTime")
+        remove_element_from_dict(group, "mail")
+        remove_element_from_dict(group, "onPremisesDomainName")
+        remove_element_from_dict(group, "onPremisesLastSyncDateTime")
+        remove_element_from_dict(group, "onPremisesNetBiosName")
+        remove_element_from_dict(group, "onPremisesSamAccountName")
+        remove_element_from_dict(group, "onPremisesSecurityIdentifier")
+        remove_element_from_dict(group, "onPremisesSyncEnabled")
+
+        # elements where permissions are not granted and the import will probably fail
+        remove_element_from_dict(group, "proxyAddresses")
+
+        # checking if this is a mail enabled security group or distribution group
+        # If so, warn the user that this is not supported and disable mailEnabled
+        # https://learn.microsoft.com/en-us/graph/api/resources/groups-overview?view=graph-rest-1.0&tabs=http
+        if group.get("groupTypes") != ["Unified"] and group["mailEnabled"]:
+            _logger.warning(
+                f"Group {group['displayName']} is a mail enabled security group and that is not supported "
+                f"by the Microsoft Graph API. Disabling mailEnabled. Please enable it manually after import."
+            )
+            group["mailEnabled"] = False
 
         # remove all null elements or empty lists
         for key in list(group.keys()):
