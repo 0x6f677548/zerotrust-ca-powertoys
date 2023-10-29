@@ -78,9 +78,9 @@ def cleanup_groups(source: list[dict]) -> list[dict]:
         # checking if this is a mail enabled security group or distribution group
         # If so, warn the user that this is not supported and disable mailEnabled
         # https://learn.microsoft.com/en-us/graph/api/resources/groups-overview?view=graph-rest-1.0&tabs=http
-        if group.get("groupTypes") != ["Unified"] and group["mailEnabled"]:
+        if group.get("groupTypes") != ["Unified"] and group.get("mailEnabled"):
             _logger.warning(
-                f"Group {group['displayName']} is a mail enabled security group and that is not supported "
+                f"Group {group.get('displayName')} is a mail enabled security group and that is not supported "
                 f"by the Microsoft Graph API. Disabling mailEnabled. Please enable it manually after import."
             )
             group["mailEnabled"] = False
