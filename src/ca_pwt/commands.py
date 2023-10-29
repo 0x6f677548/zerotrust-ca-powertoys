@@ -401,13 +401,13 @@ def import_policies_cmd(
         _exit_with_exception(e)
 
 
-@click.command("export-groups", help="Exports groups found in a CA policies file to a file")
+@click.command("export-policy-groups", help="Exports groups found in a CA policies file to a file")
 @click.pass_context
 @_access_token_option
 @_input_file_option
 @_output_file_option
 @_ignore_not_found_option
-def export_groups_cmd(
+def export_policy_groups_cmd(
     ctx: click.Context,
     input_file: str,
     output_file: str,
