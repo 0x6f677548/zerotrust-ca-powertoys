@@ -195,7 +195,7 @@ def replace_attrs_with_guids_in_policies(
 
     # we'll initialize the lookup cache with known objects, like the built-in roles
     # so we don't have to make a call to the graph api for each one of them
-    lookup_cache: dict =  deepcopy(_BUILTIN_ROLES_NAME_ID)
+    lookup_cache: dict = deepcopy(_BUILTIN_ROLES_NAME_ID)
 
     groups_api = GroupsAPI(access_token=access_token)
     users_api = UsersAPI(access_token=access_token)
