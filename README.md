@@ -131,7 +131,7 @@ Writing policies to file policies.json...
 ```console
     
 ```console
-> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-guids-with-attrs export-groups --output_file groups.json cleanup-groups
+> ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-guids-with-attrs export-policy-groups --output_file groups.json cleanup-groups
 ```
 ```
 Exporting ca policies...

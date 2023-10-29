@@ -1,7 +1,9 @@
+import json
 import time
 import pytest
 from src.ca_pwt.commands import (
     export_policies_cmd,
+    export_policy_groups_cmd,
 )
 from click.testing import CliRunner
 from .utils import (
@@ -63,6 +65,32 @@ def test_export_policies_filter_by_name(access_token: str):
                 output_file,
                 "--odata_filter",
                 f"startswith(displayName, '{test_policy_prefix}')",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert_valid_output_file(output_file)
+
+
+def test_export_policy_groups_cmd(access_token: str):
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        # write the test data to a file
+        input_file = "policies.json"
+        with open(input_file, "w") as f:
+            # convert the test data to a string
+            f.write(json.dumps(get_valid_policies(), indent=4))
+
+        output_file = "export-policy-groups.json"
+        result = runner.invoke(
+            export_policy_groups_cmd,
+            [
+                "--access_token",
+                access_token,
+                "--input_file",
+                input_file,
+                "--output_file",
+                output_file,
             ],
         )
 

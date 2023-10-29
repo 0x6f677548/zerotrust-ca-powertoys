@@ -6,7 +6,7 @@ from ca_pwt.commands import (
     cleanup_policies_cmd,
     replace_guids_with_attrs_cmd,
     acquire_token_cmd,
-    export_groups_cmd,
+    export_policy_groups_cmd,
     import_groups_cmd,
     cleanup_groups_cmd,
     delete_groups_cmd,
@@ -48,7 +48,7 @@ cli.add_command(export_policies_cmd)
 cli.add_command(replace_attrs_with_guids_cmd)
 cli.add_command(cleanup_policies_cmd)
 cli.add_command(replace_guids_with_attrs_cmd)
-cli.add_command(export_groups_cmd)
+cli.add_command(export_policy_groups_cmd)
 cli.add_command(import_groups_cmd)
 cli.add_command(cleanup_groups_cmd)
 cli.add_command(delete_groups_cmd)
