@@ -54,6 +54,7 @@ cli.add_command(cleanup_groups_cmd)
 cli.add_command(delete_groups_cmd)
 cli.add_command(delete_policies_cmd)
 
+
 def entrypoint():
     cli(obj={})
 
