@@ -2,6 +2,15 @@ from click.testing import CliRunner
 import json
 from click.core import BaseCommand
 from .utils import assert_valid_output_file
+from src.ca_pwt.commands import (
+    cleanup_policies_cmd,
+)
+from .utils import get_valid_policies
+
+from src.ca_pwt.commands import (
+    cleanup_groups_cmd,
+)
+from .utils import get_valid_groups
 
 
 def _test_cleanup_entity(test_data: list[dict], cli: BaseCommand):
@@ -48,3 +57,18 @@ def _test_cleanup_entity(test_data: list[dict], cli: BaseCommand):
             assert "id" not in data[0]
             assert "createdDateTime" not in data[0]
             assert "modifiedDateTime" not in data[0]
+
+
+def test_cleanup_policies():
+    """Tests if the cleanup-policies command works as expected"""
+    test_policies = get_valid_policies()
+    _test_cleanup_entity(test_policies, cleanup_policies_cmd)
+    # this will test the scenario where a dict is passed instead of a list
+    _test_cleanup_entity(test_policies, cleanup_policies_cmd)
+
+
+def test_cleanup_groups():
+    """Tests if the cleanup-groups command works as expected"""
+    _test_cleanup_entity(get_valid_groups(), cleanup_groups_cmd)
+    # this will test the scenario where a dict is passed instead of a list
+    _test_cleanup_entity(get_valid_groups()[0], cleanup_groups_cmd)
