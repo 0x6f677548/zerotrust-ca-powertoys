@@ -1,11 +1,9 @@
 import requests
 import logging
-from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT, DuplicateActionEnum
+from ca_pwt.helpers.graph_api import APIResponse, EntityAPI, _REQUEST_TIMEOUT, DuplicateActionEnum, _HTTP_NOT_FOUND
 from ca_pwt.helpers.utils import assert_condition, cleanup_odata_dict, remove_element_from_dict, ensure_list
 
 _logger = logging.getLogger(__name__)
-
-_HTTP_NOT_FOUND = 404
 
 
 class GroupsAPI(EntityAPI):
@@ -59,12 +57,33 @@ def cleanup_groups(source: list[dict]) -> list[dict]:
     # exclude some elements, namely createdDateTime,
     # modifiedDateTime, id, templateId, authenticationStrength@odata.context
     for group in source:
+        # readonly elements
         remove_element_from_dict(group, "createdDateTime")
         remove_element_from_dict(group, "modifiedDateTime")
         remove_element_from_dict(group, "id")
         remove_element_from_dict(group, "templateId")
         remove_element_from_dict(group, "deletedDateTime")
         remove_element_from_dict(group, "renewedDateTime")
+        remove_element_from_dict(group, "mail")
+        remove_element_from_dict(group, "onPremisesDomainName")
+        remove_element_from_dict(group, "onPremisesLastSyncDateTime")
+        remove_element_from_dict(group, "onPremisesNetBiosName")
+        remove_element_from_dict(group, "onPremisesSamAccountName")
+        remove_element_from_dict(group, "onPremisesSecurityIdentifier")
+        remove_element_from_dict(group, "onPremisesSyncEnabled")
+
+        # elements where permissions are not granted and the import will probably fail
+        remove_element_from_dict(group, "proxyAddresses")
+
+        # checking if this is a mail enabled security group or distribution group
+        # If so, warn the user that this is not supported and disable mailEnabled
+        # https://learn.microsoft.com/en-us/graph/api/resources/groups-overview?view=graph-rest-1.0&tabs=http
+        if group.get("groupTypes") != ["Unified"] and group.get("mailEnabled"):
+            _logger.warning(
+                f"Group {group.get('displayName')} is a mail enabled security group and that is not supported "
+                f"by the Microsoft Graph API. Disabling mailEnabled. Please enable it manually after import."
+            )
+            group["mailEnabled"] = False
 
         # remove all null elements or empty lists
         for key in list(group.keys()):
@@ -112,3 +131,17 @@ def import_groups(
         result.append((group_id, group_name))
         _logger.info(f"Imported group {group_name} with id {group_id}")
     return result
+
+
+def delete_groups(access_token: str, groups: list[dict]):
+    """Deletes groups that are in the specified list of groups (mandatory fields: id)."""
+    _logger.info("Deleting groups...")
+    groups_api = GroupsAPI(access_token=access_token)
+    for group in groups:
+        group_id = group["id"]
+        response = groups_api.delete(group_id)
+        if response.status_code == _HTTP_NOT_FOUND:
+            _logger.warning(f"Group with id {group_id} was not found.")
+            continue
+        response.assert_success()
+        _logger.info(f"Deleting group with id {group_id}")

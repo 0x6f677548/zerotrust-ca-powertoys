@@ -13,6 +13,8 @@ _THROTTLING_RETRY_AFTER_HEADER = "Retry-After"
 _THROTTLING_RETRY_AFTER_DEFAULT = 10
 _THROTTLING_MAX_RETRIES = 5
 
+_HTTP_NOT_FOUND = 404
+
 
 class DuplicateActionEnum(StrEnum):
     IGNORE = "ignore"
@@ -44,14 +46,23 @@ class APIResponse:
     def json(self):
         """Returns the JSON representation of the response"""
         # check if the self.response has a json() method. If so, use it
-        if hasattr(self.response, "json"):
-            return self.response.json()
+        if hasattr(self.response, "json") and callable(self.response.json):
+            text = self.response.text
+            # check if the response is JSON
+            if text.startswith("{") and text.endswith("}"):
+                return self.response.json()
+            else:
+                return text
         else:
             return self.response
 
-    def assert_success(self):
-        """Asserts that the request was successful"""
-        assert_condition(self.success, f"Request failed with status code {self.status_code}; {self.response}")
+    def assert_success(self, error_message: str = ""):
+        """Asserts that the request was successful
+        - error_message: the error message to display if the request was not successful
+        """
+        assert_condition(
+            self.success, f"{error_message}: Request failed with status code {self.status_code}; {self.json()}"
+        )
 
 
 class EntityAPI(ABC):
@@ -94,7 +105,7 @@ class EntityAPI(ABC):
                 # log the throttling error
                 self._logger.warning(
                     f"Throttling error: {response.status_code}  {response.text}. "
-                    "Retrying in {retry_after} seconds..."
+                    f"Retrying in {retry_after} seconds..."
                 )
                 # wait for the specified number of seconds
                 time.sleep(retry_after)
@@ -222,7 +233,9 @@ class EntityAPI(ABC):
                     return existing_entity
                 elif duplicate_action == DuplicateActionEnum.OVERWRITE:
                     existing_entity_id = existing_entity.json()["id"]
-                    self._logger.warning(f"Replacing entity {self._get_entity_path()} with id {existing_entity_id}...")
+                    self._logger.warning(
+                        f"Overwriting entity {self._get_entity_path()} with id {existing_entity_id}..."
+                    )
                     response = self.update(existing_entity_id, entity)
                     response.assert_success()
                     # response should be a "204 No Content" or "200 OK" response

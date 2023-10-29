@@ -10,12 +10,14 @@ from ca_pwt.policies import (
     export_policies,
     import_policies,
     get_groups_in_policies,
+    delete_policies,
 )
 from ca_pwt.groups import (
     load_groups,
     save_groups,
     cleanup_groups,
     import_groups,
+    delete_groups,
 )
 from ca_pwt.helpers.graph_api import DuplicateActionEnum
 
@@ -469,5 +471,53 @@ def import_groups_cmd(
         click.echo("Successfully created groups:")
         for group in created_groups:
             click.echo(f"{group[0]}: {group[1]}")
+    except Exception as e:
+        _exit_with_exception(e)
+
+
+@click.command(
+    "delete-groups",
+    help="Deletes groups with the specified ids in a file. The file should in the groups format but needs to "
+    "contain the id field. "
+    "This commands needs the following scopes: Group.ReadWrite.All",
+)
+@click.pass_context
+@_access_token_option
+@_input_file_option
+def delete_groups_cmd(ctx: click.Context, input_file: str, access_token: str | None = None):
+    """Deletes groups with the specified ids in a file"""
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Deleting groups...", fg="yellow")
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        click.echo(f"Input file: {input_file}")
+        groups = load_groups(input_file)
+        delete_groups(access_token=access_token, groups=groups)
+        click.echo("Successfully deleted groups.")
+    except Exception as e:
+        _exit_with_exception(e)
+
+
+@click.command(
+    "delete-policies",
+    help="Deletes policies with the specified ids in a file. The file should in the policies format but needs to "
+    "contain the id field. "
+    "This commands needs the following scopes: Policy.Read.All, Policy.ReadWrite.ConditionalAccess",
+)
+@click.pass_context
+@_access_token_option
+@_input_file_option
+def delete_policies_cmd(ctx: click.Context, input_file: str, access_token: str | None = None):
+    """Deletes policies with the specified ids in a file"""
+    try:
+        ctx.ensure_object(dict)
+        click.secho("Deleting policies...", fg="yellow")
+        access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
+        input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
+        click.echo(f"Input file: {input_file}")
+        policies = load_policies(input_file)
+        delete_policies(access_token=access_token, policies=policies)
+        click.echo("Successfully deleted policies.")
     except Exception as e:
         _exit_with_exception(e)

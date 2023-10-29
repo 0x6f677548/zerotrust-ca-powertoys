@@ -4,7 +4,9 @@ from typing import Any
 def ensure_list(source: list[dict] | dict) -> list[dict]:
     """Ensures that the source is a list.
     If it is not a list, it will be wrapped in a list.
-    If it is None, an empty list will be returned."""
+    If it is None, an empty list will be returned.
+    It also removes the value element from the dictionary if it is a list, by encapsulating it in a list.
+    """
     if source is None:
         return []
     elif isinstance(source, list):

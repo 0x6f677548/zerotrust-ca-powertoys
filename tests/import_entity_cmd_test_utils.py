@@ -17,15 +17,6 @@ def _assert_entity_existence(
     return entities
 
 
-def remove_entities(entity_api: EntityAPI, display_name: str):
-    get_entities_response = entity_api.get_all(f"displayName eq '{display_name}'")
-    assert get_entities_response is not None
-    entities = get_entities_response.json()["value"]
-    assert entities is not None
-    for entity in entities:
-        entity_api.delete(entity["id"])
-
-
 def _test_import_entity_ignore(access_token: str, cli: BaseCommand, entity_api: EntityAPI, test_entity: dict):
     """Tests if the import entity command works as expected"""
     runner = CliRunner()
