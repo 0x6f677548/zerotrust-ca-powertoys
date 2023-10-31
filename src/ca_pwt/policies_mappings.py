@@ -2,6 +2,7 @@ import logging
 from ca_pwt.groups import GroupsAPI
 from ca_pwt.users import UsersAPI
 from ca_pwt.directory_roles import DirectoryRolesAPI, DirectoryRoleTemplatesAPI
+from ca_pwt.applications import ServicePrincipalsAPI, _BUILTIN_APPS_TO_IGNORE
 from typing import Callable
 from ca_pwt.helpers.graph_api import APIResponse
 from copy import deepcopy
@@ -182,6 +183,7 @@ def replace_attrs_with_guids_in_policies(
     lookup_groups: bool = True,
     lookup_users: bool = True,
     lookup_roles: bool = True,
+    lookup_applications: bool = True,
 ) -> list[dict]:
     """Replaces values by keys in a policies file (e.g. group names by group ids)
     This is useful when you want to import a policies file that was exported from
@@ -196,11 +198,14 @@ def replace_attrs_with_guids_in_policies(
     # we'll initialize the lookup cache with known objects, like the built-in roles
     # so we don't have to make a call to the graph api for each one of them
     lookup_cache: dict = deepcopy(_BUILTIN_ROLES_NAME_ID)
+    # append the built-in apps to ignore
+    lookup_cache.update(_BUILTIN_APPS_TO_IGNORE)
 
     groups_api = GroupsAPI(access_token=access_token)
     users_api = UsersAPI(access_token=access_token)
     dir_roles_api: DirectoryRolesAPI = DirectoryRolesAPI(access_token)
     dir_role_templates_api: DirectoryRoleTemplatesAPI = DirectoryRoleTemplatesAPI(access_token)
+    svc_principals_api = ServicePrincipalsAPI(access_token=access_token)
 
     for policy in policies:
         # let's transform groupIds to groupNames if any
@@ -243,6 +248,18 @@ def replace_attrs_with_guids_in_policies(
                 ),
                 lookup_cache=lookup_cache,
             )
+        if lookup_applications:
+            applications = conditions["applications"]
+            lookup_cache = _replace_with_key_value_lookup(
+                parent_node=applications,
+                key_value_pairs=[
+                    ("includeApplicationNames", "includeApplications"),
+                    ("excludeApplicationNames", "excludeApplications"),
+                ],
+                # in CA policies, applications are represented by service principals app id
+                lookup_func=lambda key: _graph_api_lookup([svc_principals_api.get_by_display_name], key, "id"),
+                lookup_cache=lookup_cache,
+            )
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {policies}")
@@ -257,6 +274,7 @@ def replace_guids_with_attrs_in_policies(
     lookup_groups: bool = True,
     lookup_users: bool = True,
     lookup_roles: bool = True,
+    lookup_applications: bool = True,
 ) -> list[dict]:
     """Replaces keys by values in a policies file
     e.g.: "includeGroups": ["<group-id>"] -> "includeGroupNames": ["<group-name>"]
@@ -271,12 +289,15 @@ def replace_guids_with_attrs_in_policies(
 
     # we'll initialize the lookup cache with known objects, like the built-in roles
     # so we don't have to make a call to the graph api for each one of them
-    lookup_cache: dict = _BUILTIN_ROLES_ID_NAME
+    lookup_cache: dict = deepcopy(_BUILTIN_ROLES_ID_NAME)
+    # append the built-in apps to ignore
+    lookup_cache.update(_BUILTIN_APPS_TO_IGNORE)
 
     groups_api: GroupsAPI = GroupsAPI(access_token)
     users_api: UsersAPI = UsersAPI(access_token)
     dir_roles_api: DirectoryRolesAPI = DirectoryRolesAPI(access_token)
     dir_role_templates_api: DirectoryRoleTemplatesAPI = DirectoryRoleTemplatesAPI(access_token)
+    svc_principals_api: ServicePrincipalsAPI = ServicePrincipalsAPI(access_token)
 
     for policy in policies:
         # let's transform groupIds to groupNames if any
@@ -316,8 +337,20 @@ def replace_guids_with_attrs_in_policies(
                 ),
                 lookup_cache=lookup_cache,
             )
+        if lookup_applications:
+            applications = conditions["applications"]
+            lookup_cache = _replace_with_key_value_lookup(
+                parent_node=applications,
+                key_value_pairs=[
+                    ("excludeApplications", "excludeApplicationNames"),
+                    ("includeApplications", "includeApplicationNames"),
+                ],
+                # in CA policies, applications are represented by service principals app id
+                lookup_func=lambda key: _graph_api_lookup([svc_principals_api.get_by_app_id], key, "displayName"),
+                lookup_cache=lookup_cache,
+            )
 
     if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug(f"Source: {policies}")
+        _logger.debug(f"Output: {policies}")
 
     return policies

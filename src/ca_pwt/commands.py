@@ -215,7 +215,9 @@ def replace_guids_with_attrs_cmd(
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
-        policies = replace_guids_with_attrs_in_policies(access_token, policies)
+        policies = replace_guids_with_attrs_in_policies(
+            access_token, policies, lookup_groups=True, lookup_roles=True, lookup_users=True, lookup_applications=True
+        )
 
         save_policies(policies=policies, output_file=output_file)
 
@@ -258,7 +260,9 @@ def replace_attrs_with_guids_cmd(
         click.echo(f"Input file: {input_file}; Output file: {output_file}")
 
         policies = load_policies(input_file)
-        policies = replace_attrs_with_guids_in_policies(access_token, policies)
+        policies = replace_attrs_with_guids_in_policies(
+            access_token, policies, lookup_groups=True, lookup_users=True, lookup_roles=True, lookup_applications=True
+        )
 
         save_policies(policies=policies, output_file=output_file)
 
