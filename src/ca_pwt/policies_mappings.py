@@ -185,12 +185,12 @@ def replace_attrs_with_guids_in_policies(
     lookup_roles: bool = True,
     lookup_applications: bool = True,
 ) -> list[dict]:
-    """Replaces values by keys in a policies file (e.g. group names by group ids)
+    """Replaces attributes with guids in a policies file (e.g. group names by group ids)
     This is useful when you want to import a policies file that was exported from
     a different tenant and groups have different ids.
     """
 
-    _logger.info("Replacing values by keys...")
+    _logger.info("Replacing attributes with guids...")
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {policies}")
@@ -276,13 +276,13 @@ def replace_guids_with_attrs_in_policies(
     lookup_roles: bool = True,
     lookup_applications: bool = True,
 ) -> list[dict]:
-    """Replaces keys by values in a policies file
+    """Replaces guids with attributes in a policies file
     e.g.: "includeGroups": ["<group-id>"] -> "includeGroupNames": ["<group-name>"]
     This is useful when you want to export a policies file that can be imported in a
     different tenant and groups have different ids or when you want to maintain a policies
     file in a source control system and you want to use group names instead of ids.
     """
-    _logger.info("Converting keys to values in policies file...")
+    _logger.info("Replacing guids with attributes in policies file...")
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {policies}")
