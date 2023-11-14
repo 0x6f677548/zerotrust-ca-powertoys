@@ -64,6 +64,11 @@ class APIResponse:
             self.success, f"{error_message}: Request failed with status code {self.status_code}; {self.json()}"
         )
 
+    def __str__(self) -> str:
+        """Returns a string representation of the object"""
+        response_text = self.response.text if hasattr(self.response, "text") else self.response
+        return f"APIResponse: status_code={self.status_code}, success={self.success}, response={response_text}"
+
 
 class EntityAPI(ABC):
     """An abstract class to represent an entity in the Microsoft Graph API"""
@@ -189,13 +194,16 @@ class EntityAPI(ABC):
         """
         return self.get_top_entity(f"displayName eq '{display_name}'")
 
-    def get_top_entity(self, odata_filter: str) -> APIResponse:
+    def get_top_entity(self, odata_filter: str, *, 
+                       use_top: bool = True) -> APIResponse:
         """Gets the top entity found with the given filter
         Returns an API_Response object and the entity is in the json property of the API_Response object
+        If use_top is True, the $top query parameter is used to get only the top entity, otherwise all entities are
+        returned and the first one is returned
         """
 
         assert_condition(odata_filter, "odata_filter cannot be None")
-        response = self.get_all(odata_filter=odata_filter, odata_top=1)
+        response = self.get_all(odata_filter=odata_filter, odata_top=1 if use_top else None)
         # if the request was successful, transform the response to a dict
         if response.success:
             # move the value property to the response property
