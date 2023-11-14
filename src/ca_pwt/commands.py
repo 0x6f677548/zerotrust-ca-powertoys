@@ -21,9 +21,14 @@ from ca_pwt.groups import (
 )
 from ca_pwt.helpers.graph_api import DuplicateActionEnum
 
-from ca_pwt.policies_mappings import replace_guids_with_attrs_in_policies, replace_attrs_with_guids_in_policies
+from ca_pwt.policies_mappings import (
+    replace_guids_with_attrs_in_policies,
+    replace_attrs_with_guids_in_policies,
+    load_lookup_cache_from_file,
+)
 
 _logger = logging.getLogger(__name__)
+
 
 _output_file_option = click.option(
     "--output_file",
@@ -39,6 +44,18 @@ _input_file_option = click.option(
     prompt="The input file",
     prompt_required=False,
     help="The file to read the policies from",
+)
+
+_lookup_cache_file_option = click.option(
+    "--lookup_cache_file",
+    type=click.Path(exists=False),  # although it should exists, chaining commands will fail if it does not
+    prompt="The lookup cache file",
+    prompt_required=False,
+    help="The file to read the lookup cache from. "
+    "This file will be used to initially load the lookup cache between guids "
+    "and attributes. The expected format is a json file with a dictionary of [str, str] pairs, where the "
+    "key is the guid and the value is the attribute. "
+    "e.g. {'00000000-0000-0000-0000-000000000000': 'All Users'}",
 )
 
 _access_token_option = click.option(
@@ -194,10 +211,12 @@ def acquire_token_cmd(
 @_access_token_option
 @_output_file_option
 @_input_file_option
+@_lookup_cache_file_option
 def replace_guids_with_attrs_cmd(
     ctx: click.Context,
     input_file: str,
     output_file: str,
+    lookup_cache_file: str | None = None,
     access_token: str | None = None,
 ):
     """Makes the CA policies file human-readable, by replacing guids with
@@ -212,11 +231,23 @@ def replace_guids_with_attrs_cmd(
         access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
-        click.echo(f"Input file: {input_file}; Output file: {output_file}")
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        click.echo(f"Input file: {input_file}; Output file: {output_file}; Lookup cache file: {lookup_cache_file}")
+
+        policies = load_policies(input_file)
+        lookup_cache = (
+            load_lookup_cache_from_file(lookup_cache_file, reverse_format=False) if lookup_cache_file else None
+        )
 
         policies = load_policies(input_file)
         policies = replace_guids_with_attrs_in_policies(
-            access_token, policies, lookup_groups=True, lookup_roles=True, lookup_users=True, lookup_applications=True
+            access_token,
+            policies,
+            lookup_groups=True,
+            lookup_roles=True,
+            lookup_users=True,
+            lookup_applications=True,
+            lookup_cache=lookup_cache,
         )
 
         save_policies(policies=policies, output_file=output_file)
@@ -237,10 +268,12 @@ def replace_guids_with_attrs_cmd(
 @_access_token_option
 @_output_file_option
 @_input_file_option
+@_lookup_cache_file_option
 def replace_attrs_with_guids_cmd(
     ctx: click.Context,
     input_file: str,
     output_file: str,
+    lookup_cache_file: str | None = None,
     access_token: str | None = None,
 ):
     """Makes the CA policies file machine-readable, by replacing attributes with
@@ -257,11 +290,21 @@ def replace_attrs_with_guids_cmd(
 
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
-        click.echo(f"Input file: {input_file}; Output file: {output_file}")
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        click.echo(f"Input file: {input_file}; Output file: {output_file}; Lookup cache file: {lookup_cache_file}")
 
         policies = load_policies(input_file)
+        lookup_cache = (
+            load_lookup_cache_from_file(lookup_cache_file, reverse_format=True) if lookup_cache_file else None
+        )
         policies = replace_attrs_with_guids_in_policies(
-            access_token, policies, lookup_groups=True, lookup_users=True, lookup_roles=True, lookup_applications=True
+            access_token,
+            policies,
+            lookup_groups=True,
+            lookup_users=True,
+            lookup_roles=True,
+            lookup_applications=True,
+            lookup_cache=lookup_cache,
         )
 
         save_policies(policies=policies, output_file=output_file)
@@ -372,10 +415,12 @@ def cleanup_groups_cmd(ctx: click.Context, input_file: str, output_file: str):
 @click.pass_context
 @_access_token_option
 @_input_file_option
+@_lookup_cache_file_option
 @_duplicate_action_option
 def import_policies_cmd(
     ctx: click.Context,
     input_file: str,
+    lookup_cache_file: str | None = None,
     access_token: str | None = None,
     duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ):
@@ -390,12 +435,16 @@ def import_policies_cmd(
             input_file,
             lambda: click.prompt("The input file", type=click.Path(exists=True)),
         )
-        click.echo(f"Input file: {input_file}")
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        click.echo(f"Input file: {input_file}; Lookup cache file: {lookup_cache_file}")
 
         policies = load_policies(input_file)
+        lookup_cache = (
+            load_lookup_cache_from_file(lookup_cache_file, reverse_format=True) if lookup_cache_file else None
+        )
 
         created_policies = import_policies(
-            access_token=access_token, policies=policies, duplicate_action=duplicate_action
+            access_token=access_token, policies=policies, duplicate_action=duplicate_action, lookup_cache=lookup_cache
         )
 
         click.echo("Successfully created policies:")
@@ -410,11 +459,13 @@ def import_policies_cmd(
 @_access_token_option
 @_input_file_option
 @_output_file_option
+@_lookup_cache_file_option
 @_ignore_not_found_option
 def export_policy_groups_cmd(
     ctx: click.Context,
     input_file: str,
     output_file: str,
+    lookup_cache_file: str | None = None,
     access_token: str | None = None,
     *,
     ignore_not_found: bool = False,
@@ -426,9 +477,16 @@ def export_policy_groups_cmd(
         access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
-        click.echo(f"Input file: {input_file}; Output file: {output_file}")
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        click.echo(f"Input file: {input_file}; Output file: {output_file}; Lookup cache file: {lookup_cache_file}")
+
         policies = load_policies(input_file)
-        groups = get_groups_in_policies(access_token, policies, ignore_not_found=ignore_not_found)
+        lookup_cache = (
+            load_lookup_cache_from_file(lookup_cache_file, reverse_format=True) if lookup_cache_file else None
+        )
+        groups = get_groups_in_policies(
+            access_token, policies, ignore_not_found=ignore_not_found, lookup_cache=lookup_cache
+        )
         save_groups(groups=groups, output_file=output_file)
 
         # store the output file in the context for chaining commands

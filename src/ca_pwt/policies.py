@@ -72,6 +72,7 @@ def export_policies(access_token: str, odata_filter: str | None = None) -> list[
 def import_policies(
     access_token: str,
     policies: list[dict],
+    lookup_cache: dict[str, str] | None = None,
     duplicate_action: DuplicateActionEnum = DuplicateActionEnum.IGNORE,
 ) -> list[tuple[str, str]]:
     """Imports the specified policies. If allow_duplicates is False,
@@ -83,7 +84,8 @@ def import_policies(
 
     policies_api = PoliciesAPI(access_token=access_token)
     policies = replace_attrs_with_guids_in_policies(
-        access_token, policies, lookup_groups=True, lookup_users=True, lookup_roles=True, lookup_applications=True
+        access_token, policies, lookup_groups=True, lookup_users=True, lookup_roles=True, lookup_applications=True,
+        lookup_cache=lookup_cache
     )
     # make sure the policies are cleaned up
     policies = cleanup_policies(policies)
@@ -102,6 +104,7 @@ def import_policies(
 def get_groups_in_policies(
     access_token: str,
     policies: list[dict],
+    lookup_cache: dict[str, str] | None = None,
     *,
     ignore_not_found: bool = False,
 ) -> list[dict]:
@@ -110,7 +113,8 @@ def get_groups_in_policies(
     Returns a dictionary with the groups."""
     # make sure that all groups are in the key format
     policies = replace_attrs_with_guids_in_policies(
-        access_token, policies, lookup_groups=True, lookup_users=False, lookup_roles=False, lookup_applications=False
+        access_token, policies, lookup_groups=True, lookup_users=False, lookup_roles=False, lookup_applications=False,
+        lookup_cache=lookup_cache
     )
 
     groups_found: list[str] = []
