@@ -98,7 +98,7 @@ def _get_from_ctx_if_none(
     ctx: click.Context,
     ctx_key: str,
     value: str | None,
-    invoke_func: Callable[..., str],
+    invoke_func: Callable[..., str] = lambda: "",
     **kwargs: Any,
 ) -> str:
     """Get a value from the context if it is None,
@@ -231,7 +231,7 @@ def replace_guids_with_attrs_cmd(
         access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
-        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file)
         click.echo(f"Input file: {input_file}; Output file: {output_file}; Lookup cache file: {lookup_cache_file}")
 
         policies = load_policies(input_file)
@@ -290,7 +290,7 @@ def replace_attrs_with_guids_cmd(
 
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
-        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file)
         click.echo(f"Input file: {input_file}; Output file: {output_file}; Lookup cache file: {lookup_cache_file}")
 
         policies = load_policies(input_file)
@@ -435,7 +435,7 @@ def import_policies_cmd(
             input_file,
             lambda: click.prompt("The input file", type=click.Path(exists=True)),
         )
-        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file)
         click.echo(f"Input file: {input_file}; Lookup cache file: {lookup_cache_file}")
 
         policies = load_policies(input_file)
@@ -477,7 +477,7 @@ def export_policy_groups_cmd(
         access_token = _get_from_ctx_if_none(ctx, "access_token", access_token, acquire_token_cmd)
         input_file = _get_from_ctx_if_none(ctx, "output_file", input_file, lambda: click.prompt("The input file"))
         output_file = _get_from_ctx_if_none(ctx, "output_file", output_file, lambda: click.prompt("The output file"))
-        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file, lambda: None)
+        lookup_cache_file = _get_from_ctx_if_none(ctx, "lookup_cache_file", lookup_cache_file)
         click.echo(f"Input file: {input_file}; Output file: {output_file}; Lookup cache file: {lookup_cache_file}")
 
         policies = load_policies(input_file)
