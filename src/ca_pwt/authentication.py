@@ -3,7 +3,7 @@ from typing import Callable
 from msal import PublicClientApplication, ConfidentialClientApplication
 
 _common_tenant_id = "common"
-_default_client_id = "14d82eec-204b-4c2f-b7e8-296a70dab67e" # "Microsoft Graph Command Line Tools"
+_default_client_id = "14d82eec-204b-4c2f-b7e8-296a70dab67e"  # "Microsoft Graph Command Line Tools"
 _default_scopes = ["https://graph.microsoft.com/.default"]
 
 _logger = logging.getLogger(__name__)
@@ -29,6 +29,7 @@ def acquire_token(
     """
     if device_code:
         import sys
+
         _logger.debug("Acquiring token using device code flow")
         access_token = acquire_token_by_device_flow(
             sys.stderr.write,
