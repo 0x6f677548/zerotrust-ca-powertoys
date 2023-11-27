@@ -128,6 +128,7 @@ def replace_attrs_with_guids_in_policies(
 
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug(f"Source: {policies}")
+        _logger.debug(f"Lookup cache: {lookup_cache}")
 
     if lookup_cache is None:
         # we'll initialize the lookup cache with known objects, like the built-in roles
@@ -192,7 +193,7 @@ def replace_attrs_with_guids_in_policies(
                     ("excludeApplicationNames", "excludeApplications"),
                 ],
                 # in CA policies, applications are represented by service principals app id
-                lookup_func=lambda key: _graph_api_lookup([svc_principals_api.get_by_display_name], key, "id"),
+                lookup_func=lambda key: _graph_api_lookup([svc_principals_api.get_by_display_name], key, "appId"),
                 lookup_cache=lookup_cache,
             )
 
