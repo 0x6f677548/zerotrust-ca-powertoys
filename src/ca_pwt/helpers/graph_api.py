@@ -194,8 +194,7 @@ class EntityAPI(ABC):
         """
         return self.get_top_entity(f"displayName eq '{display_name}'")
 
-    def get_top_entity(self, odata_filter: str, *, 
-                       use_top: bool = True) -> APIResponse:
+    def get_top_entity(self, odata_filter: str, *, use_top: bool = True) -> APIResponse:
         """Gets the top entity found with the given filter
         Returns an API_Response object and the entity is in the json property of the API_Response object
         If use_top is True, the $top query parameter is used to get only the top entity, otherwise all entities are

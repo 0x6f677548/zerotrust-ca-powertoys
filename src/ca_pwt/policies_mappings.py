@@ -133,7 +133,7 @@ def replace_attrs_with_guids_in_policies(
     if lookup_cache is None:
         # we'll initialize the lookup cache with known objects, like the built-in roles
         # so we don't have to make a call to the graph api for each one of them
-        lookup_cache: dict[str, str] = deepcopy(_BUILTIN_ROLES_NAME_ID)
+        lookup_cache = deepcopy(_BUILTIN_ROLES_NAME_ID)
         # append the built-in apps
         lookup_cache.update(_BUILTIN_APPS_NAME_ID)
 
@@ -227,7 +227,7 @@ def replace_guids_with_attrs_in_policies(
     if lookup_cache is None:
         # we'll initialize the lookup cache with known objects, like the built-in roles
         # so we don't have to make a call to the graph api for each one of them
-        lookup_cache: dict[str, str] = deepcopy(_BUILTIN_ROLES_ID_NAME)
+        lookup_cache = deepcopy(_BUILTIN_ROLES_ID_NAME)
         # append the built-in apps
         lookup_cache.update(_BUILTIN_APPS_ID_NAME)
 
