@@ -78,7 +78,7 @@ _VALID_POLICIES: list[dict] = [
             "servicePrincipalRiskLevels": [],
             "applications": {
                 "includeApplications": ["All"],
-                "excludeApplications": [],
+                "excludeApplications": ["d4ebce55-015a-49b5-a083-c84d1797ae8c"],
                 "includeUserActions": [],
                 "includeAuthenticationContextClassReferences": [],
             },

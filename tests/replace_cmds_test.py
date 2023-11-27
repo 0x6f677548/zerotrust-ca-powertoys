@@ -92,6 +92,12 @@ def test_replace_guids_with_attrs_and_replace_attrs_with_guids(access_token: str
             == test_policies[0]["conditions"]["users"]["includeRoles"][1]
         )
 
+        # check if applications have been converted
+        assert data[0]["conditions"]["applications"]["includeApplicationNames"]
+        assert "includeApplications" not in data[0]["conditions"]["applications"]
+        assert data[0]["conditions"]["applications"]["excludeApplicationNames"]
+        assert "excludeApplications" not in data[0]["conditions"]["applications"]
+
         # we're going to inject an invalid value in the includeRoleNames node
         data[0]["conditions"]["users"]["includeRoleNames"].append("test role")
 
@@ -138,3 +144,11 @@ def test_replace_guids_with_attrs_and_replace_attrs_with_guids(access_token: str
             # this node has one item with an invalid value that wasn't able to be converted
             assert "includeRoleNames" in data[0]["conditions"]["users"]
             assert len(data[0]["conditions"]["users"]["includeRoleNames"]) == 1
+
+            # check if applications have been converted
+            assert data[0]["conditions"]["applications"]["includeApplications"]
+            assert "includeApplicationNames" not in data[0]["conditions"]["applications"]
+            assert data[0]["conditions"]["applications"]["excludeApplications"]
+            assert (
+                "excludeApplicationNames" not in data[0]["conditions"]["applications"]
+            ), "excludeApplicationNames should not be in the output file"
