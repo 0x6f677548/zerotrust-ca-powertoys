@@ -9,7 +9,7 @@ description = 'CA-PowerToys is a set of tools to help you manage Conditional Acc
 readme = "README.md"
 requires-python = ">=3.7"
 license = "MIT"
-keywords = ["azure", "entraid", "conditional-access", "policies", "azure-ad", "microsoft"]
+keywords = ["azure", "entraid", "conditional-access", "policies", "azure-ad", "microsoft", "policy-as-code"]
 authors = [
   { name = "0x6f677546 (Hugo Batista)"},
 ]

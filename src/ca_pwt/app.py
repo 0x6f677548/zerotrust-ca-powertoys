@@ -21,7 +21,8 @@ from ca_pwt.commands import (
     help="A set of tools designed to streamline the management of Conditional Access policies in Entra ID. "
     "These tools specialize in importing and exporting CA policies and groups, optimizing files for human and machine "
     "readability as needed. Additionally, they facilitate the removal of extraneous attributes for smoother "
-    "editing workflows, and facilitate a devops-like workflow for managing CA policies.",
+    "editing workflows, and facilitate a devops-like workflow for managing CA policies, facilitating a Policy as Code "
+    "workflow.",
 )
 @click.option(
     "--log_level",
