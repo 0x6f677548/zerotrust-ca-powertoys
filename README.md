@@ -19,7 +19,8 @@ CA-PowerToys can be used to:
 - **Clean up Conditional Access policies and Groups files**, removing attributes that are read-only or not allowed in the import process
 - **Replace guids with attributes in Conditional Access policies (and vice-versa)**, making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
 
-
+# Zero Trust Sample Policies
+A set of sample policies can be found in the [Zero Trust Conditional Access Policies](https://github.com/0x6f677548/zerotrust-ca-policies) repository. These policies are based on the samples available at https://github.com/microsoft/ConditionalAccessforZeroTrustResources and the [recommended guidelines](https://docs.microsoft.com/en-us/azure/architecture/guide/security/conditional-access-zero-trust?msclkid=d1768a34ceda11ec9b6c8f244f8d05bd) and can be used as a starting point to implement a Zero Trust strategy in your organization.
 
 # Installation
 CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool, as long as you have Python >3.7 installed (or Docker).
