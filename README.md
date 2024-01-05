@@ -18,6 +18,7 @@ CA-PowerToys can be used to:
 - **Export groups** that are used in Conditional Access policies to a file
 - **Clean up Conditional Access policies and Groups files**, removing attributes that are read-only or not allowed in the import process
 - **Replace guids with attributes in Conditional Access policies (and vice-versa)**, making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
+- **Throttle the number of requests** to the Graph API, to avoid hitting the rate limits
 
 ## Zero Trust Sample Policies
 A set of sample policies can be found in the [Zero Trust Conditional Access Policies](https://github.com/0x6f677548/zerotrust-ca-policies) repository. These policies are based on the samples available at https://github.com/microsoft/ConditionalAccessforZeroTrustResources and the [recommended guidelines](https://docs.microsoft.com/en-us/azure/architecture/guide/security/conditional-access-zero-trust?msclkid=d1768a34ceda11ec9b6c8f244f8d05bd) and can be used as a starting point to implement a Zero Trust strategy in your organization.
@@ -126,10 +127,20 @@ Obtaining policies from tenant...
 Writing policies to file policies.json...
 ```
 
-#### Exporting all Policies and associated Groups, replace guids with human-readable attributes in the policies file and make the file ready for import
+#### Exporting all Policies and associated Groups
 
 ```console
-    
+> ca-pwt --access_token $token export-policies --output_file policies.json export-policy-groups --output_file groups.json
+```
+```
+Exporting ca policies...
+Output file: policies.json
+Exporting groups found in CA policies...
+Input file: policies.json; Output file: groups.json; Lookup cache file: None
+```
+
+#### Exporting all Policies and associated Groups, replace guids with human-readable attributes in the policies file and make the file ready for import
+
 ```console
 > ca-pwt --access_token $token export-policies --output_file policies.json cleanup-policies replace-guids-with-attrs export-policy-groups --output_file groups.json cleanup-groups
 ```
@@ -144,6 +155,21 @@ Exporting groups found in CA policies...
 Input file: policies.json; Output file: groups.json
 Cleaning up groups for import...
 Input file: groups.json; Output file: groups.json
+```
+#### Importing groups and policies
+
+```console
+> ca-pwt --access_token $token import-groups --input_file groups.json import-policies --input_file .\policies-humanreadable.json
+```
+```
+Importing groups...
+Input file: groups.json
+Successfully created groups:
+97d90185-6aef-4b84-9051-ed92c3b023a1: CA-Test-Group
+Importing CA policies...
+Input file: policies-humanreadable.json; Lookup cache file:
+Successfully created policies:
+896d7a7f-8300-4537-8d39-287b25f7259c: CA-Test-Policy
 ```
 
 #### Using CA-PowerToys to export policies and import them using Graph PowerShell
