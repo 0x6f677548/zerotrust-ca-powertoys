@@ -5,11 +5,10 @@
 [![GitHub - Lint](https://github.com/0x6f677548/ca-powertoys/actions/workflows/lint.yml/badge.svg)](https://github.com/0x6f677548/ca-powertoys/actions/workflows/lint.yml)
 [![GitHub - Test](https://github.com/0x6f677548/ca-powertoys/actions/workflows/test.yml/badge.svg)](https://github.com/0x6f677548/ca-powertoys/actions/workflows/test.yml)
 
-CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export and import Conditional Access policies and associated groups, facilitating the editing of the policies in a human readable format. 
+CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export and import Conditional Access policies and associated groups, facilitating the editing of the policies in a human readable format. This is particular useful if you are implementing a Policy-as-Code approach, eventually using a Git repository to store your policies and a CI/CD pipeline (like Azure DevOps) to import them into your tenant.
 
 # Why ?
 There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace guids with attributes, and import Conditional Access policies and groups. 
-This is specially useful if you are implementing Policy-as-Code and want to store your Conditional Access policies in a Git repository, and then use a CI/CD pipeline to import them into another tenant.
 
 # Capabilities
 
