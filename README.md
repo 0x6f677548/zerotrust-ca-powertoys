@@ -13,12 +13,18 @@ There are several tools to manage Conditional Access policies, such as Graph Pow
 ## Capabilities
 
 CA-PowerToys can be used to:
-- **Get an access token** to be used in subsequent commands or to be used in other tools, such as Graph PowerShell, using a desired client_id (useful if Graph PowerShell or other tools are blocked in the target tenant)
-- **Export/Import Conditional Access policies** to/from a file
-- **Export groups** that are used in Conditional Access policies to a file
-- **Clean up Conditional Access policies and Groups files**, removing attributes that are read-only or not allowed in the import process
-- **Replace guids with attributes in Conditional Access policies (and vice-versa)**, making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
-- **Throttle the number of requests** to the Graph API, to avoid hitting the rate limits
+### Get an access token 
+to be used in subsequent commands or to be used in other tools, such as Graph PowerShell, using a desired client_id (useful if Graph PowerShell or other tools are blocked in the target tenant)
+### Export/Import Conditional Access policies to/from a file
+### Export groups
+that are used in Conditional Access policies to a file
+### Clean up Conditional Access policies and Groups files
+removing attributes that are read-only or not allowed in the import process
+### Replace guids with attributes in Conditional Access policies (and vice-versa)
+making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
+![Human readable format Policies](https://raw.githubusercontent.com/0x6f677548/zerotrust-ca-powertoys/main/docs/images/human-readable-policies1.png)
+### Throttle the number of requests
+to the Graph API, to avoid hitting the rate limits
 
 ## Zero Trust Sample Policies
 A set of sample policies can be found in the [Zero Trust Conditional Access Policies](https://github.com/0x6f677548/zerotrust-ca-policies) repository. These policies are based on the samples available at https://github.com/microsoft/ConditionalAccessforZeroTrustResources and the [recommended guidelines](https://docs.microsoft.com/en-us/azure/architecture/guide/security/conditional-access-zero-trust?msclkid=d1768a34ceda11ec9b6c8f244f8d05bd) and can be used as a starting point to implement a Zero Trust strategy in your organization.
