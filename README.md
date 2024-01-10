@@ -10,21 +10,20 @@ CA-PowerToys is a set of tools to help you manage Conditional Access policies in
 ## Why ?
 There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace guids with attributes, and import Conditional Access policies and groups. 
 
-## Capabilities
+## Features
 
 CA-PowerToys can be used to:
-### Get an access token 
-to be used in subsequent commands or to be used in other tools, such as Graph PowerShell, using a desired client_id (useful if Graph PowerShell or other tools are blocked in the target tenant)
-### Export/Import Conditional Access policies to/from a file
-### Export groups
-that are used in Conditional Access policies to a file
-### Clean up Conditional Access policies and Groups files
-removing attributes that are read-only or not allowed in the import process
-### Replace guids with attributes in Conditional Access policies (and vice-versa)
-making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
+- **Get an access token** to be used in subsequent commands or to be used in other tools, such as Graph PowerShell, using a desired client_id (useful if Graph PowerShell or other tools are blocked in the target tenant)
+- **Export/Import Conditional Access policies** to/from a file
+- **Export groups** that are used in Conditional Access policies to a file
+- **Clean up Conditional Access policies and Groups files**, removing attributes that are read-only or not allowed in the import process
+- **Replace guids with attributes in Conditional Access policies (and vice-versa)**, making it "human readable" and editable. For example, replace the `id` attribute with the `displayName` attribute in a list of excluded groups in a Conditional Access policy
+- **Throttle the number of requests** to the Graph API, to avoid hitting the rate limits
+
+### Human readable format Policies
+One of the key features of CA-PowerToys is the ability to export CA Policies in a human readable format, where guids are replaced with attributes. This is particularly useful if you are implementing a Policy-as-Code approach, eventually using a Git repository to store your policies and a CI/CD pipeline (like Azure DevOps) to import them into your tenant.
 ![Human readable format Policies](https://raw.githubusercontent.com/0x6f677548/zerotrust-ca-powertoys/main/docs/images/human-readable-policies1.png)
-### Throttle the number of requests
-to the Graph API, to avoid hitting the rate limits
+
 
 ## Zero Trust Sample Policies
 A set of sample policies can be found in the [Zero Trust Conditional Access Policies](https://github.com/0x6f677548/zerotrust-ca-policies) repository. These policies are based on the samples available at https://github.com/microsoft/ConditionalAccessforZeroTrustResources and the [recommended guidelines](https://docs.microsoft.com/en-us/azure/architecture/guide/security/conditional-access-zero-trust?msclkid=d1768a34ceda11ec9b6c8f244f8d05bd) and can be used as a starting point to implement a Zero Trust strategy in your organization.
@@ -64,6 +63,8 @@ To get help on a specific command, use the `--help` option with the command name
 ```console
 > ca-pwt export-policies --help
 ```
+
+CA-PowerToys is based on [Click](https://github.com/pallets/click/), taking advantage of its features, such as chaining commands and options. As an example, several commands can be chained to achieve a specific goal, such as exporting policies, cleaning them up for import, replacing guids with attributes, and importing them back to the tenant. Further examples are provided below.
 
 ### Usage Examples
 
