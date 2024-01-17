@@ -9,6 +9,8 @@ CA-PowerToys is a set of tools to help you manage Conditional Access policies in
 
 ## Why ?
 There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace guids with attributes, and import Conditional Access policies and groups. 
+![Export and Import Architecture](https://raw.githubusercontent.com/0x6f677548/zerotrust-ca-powertoys/main/docs/images/ca-powertoys-overview-architecture.png)
+
 
 ## Features
 
