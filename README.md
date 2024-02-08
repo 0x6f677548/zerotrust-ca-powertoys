@@ -212,3 +212,9 @@ Id                                   CreatedDateTime     Description DisplayName
 7b385aec-569a-470a-980b-8624bfa6332c 14/10/2023 07:52:54             CA001-Global-BaseProtection-All…
 ```
 Note: In the above example, a token was previously obtained using the `acquire-token` and stored in the `$token` variable.
+
+## FAQ
+### If I prefer to create a service principal to execute CA-PowerToys, what permissions are needed?
+It depends on the commands you may need to run. Please keep in mind that by creating a SP with some of these permissions, this will allow anyone with the SP credentials to change CA policies and add groups to your tenant. **Make sure you understand the implications of doing it.**
+In a very controlled lab environment, and to run all the available commands, you may create a SP with the following permissions:
+![image](https://github.com/0x6f677548/zerotrust-ca-powertoys/assets/64972114/d3b887b0-388d-42d8-b352-0c08608874dc)
