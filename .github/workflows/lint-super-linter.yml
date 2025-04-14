@@ -1,0 +1,51 @@
+---
+name: Lint-> super-linter (only event codebase)
+
+on:
+  release:
+    types: [released]
+  pull_request:
+    branches: [master, main]
+
+# set the run-name 
+run-name: ${{ github.ref_name }} -> Super-linter (only event codebase) (
+  ${{ github.run_attempt }}
+  )
+
+permissions: read-all
+
+jobs:
+  build:
+
+    name: Lint code base part of the event
+    runs-on: ubuntu-latest
+
+    ############################################
+    # Grant status permission for MULTI_STATUS #
+    ############################################
+    permissions:
+      contents: read
+      statuses: write
+
+    steps:
+
+      - name: Echo current date and time
+        id: datetime
+        run: |
+          echo "datetime: $(date '+%Y-%m-%d %H:%M:%S')"
+
+      - name: Checkout Code
+        uses: actions/checkout@v4.1.1
+        with:
+          # Full git history is needed to get a proper
+          # list of changed files within `super-linter`
+          fetch-depth: 0
+
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Lint Code Base
+        uses: super-linter/super-linter@v6.2.0  
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

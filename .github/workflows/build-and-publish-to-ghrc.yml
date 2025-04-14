@@ -19,21 +19,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
             
 jobs:
-
-  output_debug_info:
-    name: Output debug info
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Get current date and time
-      id: datetime
-      run: |
-        datetime=$(date +'%Y-%m-%dT%H-%M-%SZ')
-        echo "datetime=$datetime" >> $GITHUB_OUTPUT
-
-    - name: Display Run Name
-      run: echo ${{ steps.datetime.outputs.datetime }}
-
     
   build_and_publish:
     name: Build artifacts and publish to ghrc
@@ -42,6 +27,11 @@ jobs:
       contents: write
       packages: write
     steps:
+
+    - name: Echo current date and time
+      id: datetime
+      run: |
+        echo "datetime: $(date '+%Y-%m-%d %H:%M:%S')"
 
     - name: Checkout
       uses: actions/checkout@v4.1.0

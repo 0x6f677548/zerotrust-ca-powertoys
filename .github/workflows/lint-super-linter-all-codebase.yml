@@ -1,0 +1,51 @@
+---
+name: Lint-> super-linter (all codebase)
+
+on:
+  workflow_dispatch:
+  
+  schedule:
+    # run on mondays and thursdays at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+# set the run-name 
+run-name: ${{ github.ref_name }} -> Super-linter (all codebase) (
+  ${{ github.run_attempt }}
+  )
+
+permissions: read-all
+
+jobs:
+  build:
+
+    name: Lint all codebase
+    runs-on: ubuntu-latest
+
+    ############################################
+    # Grant status permission for MULTI_STATUS #
+    ############################################
+    permissions:
+      contents: read
+
+    steps:
+
+      - name: Echo current date and time
+        id: datetime
+        run: |
+          echo "datetime: $(date '+%Y-%m-%d %H:%M:%S')"
+
+      - name: Checkout Code
+        uses: actions/checkout@v4.1.1
+        with:
+          # Full git history is needed to get a proper
+          # list of changed files within `super-linter`
+          fetch-depth: 0
+
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Lint Code Base
+        uses: super-linter/super-linter@v6.2.0  
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

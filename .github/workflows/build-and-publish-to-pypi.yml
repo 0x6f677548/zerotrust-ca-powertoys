@@ -19,14 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Get current date and time
+    - name: Echo current date and time
       id: datetime
       run: |
-        datetime=$(date +'%Y-%m-%dT%H-%M-%SZ')
-        echo "datetime=$datetime" >> $GITHUB_OUTPUT
-
-    - name: Display Run Name
-      run: echo ${{ steps.datetime.outputs.datetime }}
+        echo "datetime: $(date '+%Y-%m-%d %H:%M:%S')"
 
     
   build_and_publish:
