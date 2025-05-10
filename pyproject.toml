@@ -41,9 +41,9 @@ dependencies = [
 ca-pwt = "ca_pwt:entrypoint"
 
 [project.urls]
-Documentation = "https://github.com/0x6f677548/ca-pwt#readme"
-Issues = "https://github.com/0x6f677548/ca-pwt/issues"
-Source = "https://github.com/0x6f677548/ca-pwt"
+Documentation = "https://go.hugobatista.com/gh/zerotrust-ca-powertoys#readme"
+Issues = "https://go.hugobatista.com/gh/zerotrust-ca-powertoys/issues"
+Source = "https://go.hugobatista.com/gh/zerotrust-ca-powertoys"
 
 [tool.hatch.version]
 path = "src/ca_pwt/__about__.py"

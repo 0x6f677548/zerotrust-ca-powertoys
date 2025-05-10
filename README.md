@@ -2,11 +2,11 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ca-pwt.svg)](https://pypi.org/project/ca-pwt)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ca-pwt.svg)](https://pypi.org/project/ca-pwt)
-[![GitHub - Lint](https://github.com/0x6f677548/zerotrust-ca-powertoys/actions/workflows/lint.yml/badge.svg)](https://github.com/0x6f677548/zerotrust-ca-powertoys/actions/workflows/lint.yml)
-[![GitHub - Test](https://github.com/0x6f677548/zerotrust-ca-powertoys/actions/workflows/test.yml/badge.svg)](https://github.com/0x6f677548/zerotrust-ca-powertoys/actions/workflows/test.yml)
+[![GitHub - Lint](https://go.hugobatista.com/gh/zerotrust-ca-powertoys/actions/workflows/lint.yml/badge.svg)](https://go.hugobatista.com/gh/zerotrust-ca-powertoys/actions/workflows/lint.yml)
+[![GitHub - Test](https://go.hugobatista.com/gh/zerotrust-ca-powertoys/actions/workflows/test.yml/badge.svg)](https://go.hugobatista.com/gh/zerotrust-ca-powertoys/actions/workflows/test.yml)
 
 CA-PowerToys is a set of tools to help you manage Conditional Access policies in your tenant. It is a command line tool that can be used to export and import Conditional Access policies and associated groups, facilitating the editing of the policies in a human readable format. This is particular useful if you are implementing a Policy-as-Code approach, eventually using a Git repository to store your policies and a CI/CD pipeline (like Azure DevOps) to import them into your tenant.
-![Overview](https://raw.githubusercontent.com/0x6f677548/zerotrust-ca-powertoys/main/docs/images/ca-powertoys-overview-architecture.png)
+![Overview](https://go.hugobatista.com/ghraw/zerotrust-ca-powertoys/main/docs/images/ca-powertoys-overview-architecture.png)
 
 ## Why ?
 There are several tools to manage Conditional Access policies, such as Graph PowerShell, Microsoft Graph API, Azure AD PowerShell and even M365DSC. Unfortunately, none of these tools can be used to export Conditional Access policies in a **format that can be human readable and editable**, and then **import them back to another tenant**. This is where CA-PowerToys can help you, with several commands that can be chained to export, clean up, replace guids with attributes, and import Conditional Access policies and groups. 
@@ -24,11 +24,11 @@ CA-PowerToys can be used to:
 
 ### Human readable format Policies
 One of the key features of CA-PowerToys is the ability to export CA Policies in a human readable format, where guids are replaced with attributes. This is particularly useful if you are implementing a Policy-as-Code approach, eventually using a Git repository to store your policies and a CI/CD pipeline (like Azure DevOps) to import them into your tenant.
-![Human readable format Policies](https://raw.githubusercontent.com/0x6f677548/zerotrust-ca-powertoys/main/docs/images/human-readable-policies1.png)
+![Human readable format Policies](https://go.hugobatista.com/ghraw/zerotrust-ca-powertoys/main/docs/images/human-readable-policies1.png)
 
 
 ## Zero Trust Sample Policies
-A set of sample policies can be found in the [Zero Trust Conditional Access Policies](https://github.com/0x6f677548/zerotrust-ca-policies) repository. These policies are based on the samples available at https://github.com/microsoft/ConditionalAccessforZeroTrustResources and the [recommended guidelines](https://docs.microsoft.com/en-us/azure/architecture/guide/security/conditional-access-zero-trust?msclkid=d1768a34ceda11ec9b6c8f244f8d05bd) and can be used as a starting point to implement a Zero Trust strategy in your organization.
+A set of sample policies can be found in the [Zero Trust Conditional Access Policies](https://go.hugobatista.com/gh/zerotrust-ca-policies) repository. These policies are based on the samples available at https://github.com/microsoft/ConditionalAccessforZeroTrustResources and the [recommended guidelines](https://docs.microsoft.com/en-us/azure/architecture/guide/security/conditional-access-zero-trust?msclkid=d1768a34ceda11ec9b6c8f244f8d05bd) and can be used as a starting point to implement a Zero Trust strategy in your organization.
 
 ## Installation
 CA-PowerToys is a command line tool that can be used in Windows, Linux, and MacOS. It is written in Python and can be used as a module or as a standalone tool, as long as you have Python >3.7 installed (or Docker).
@@ -43,7 +43,7 @@ To install it, you can use pip:
 ### From source code
 You can also install it from the source code:
 ```console
-> git clone https://github.com/0x6f677548/zerotrust-ca-powertoys.git
+> git clone https://go.hugobatista.com/gh/zerotrust-ca-powertoys.git
 > cd ca-powertoys
 > pip install .
 > ca-pwt --help
@@ -217,4 +217,4 @@ Note: In the above example, a token was previously obtained using the `acquire-t
 ### If I prefer to create a service principal to execute CA-PowerToys, what permissions are needed?
 It depends on the commands you may need to run. Please keep in mind that by creating a SP with some of these permissions, this will allow anyone with the SP credentials to change CA policies and add groups to your tenant. **Make sure you understand the implications of doing it.**
 In a very controlled lab environment, and to run all the available commands, you may create a SP with the following permissions:
-![image](https://github.com/0x6f677548/zerotrust-ca-powertoys/assets/64972114/d3b887b0-388d-42d8-b352-0c08608874dc)
+![image](https://go.hugobatista.com/gh/zerotrust-ca-powertoys/assets/64972114/d3b887b0-388d-42d8-b352-0c08608874dc)
